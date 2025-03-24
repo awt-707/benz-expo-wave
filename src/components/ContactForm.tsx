@@ -1,16 +1,42 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Car } from 'lucide-react';
 
 const ContactForm = () => {
   const { toast } = useToast();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
     telephone: '',
     message: '',
+    vehiculeId: '',
+    vehiculeTitre: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Check if we have vehicule params in the URL
+    const params = new URLSearchParams(location.search);
+    const vehiculeId = params.get('vehicule');
+    const vehiculeTitre = params.get('titre');
+    
+    if (vehiculeId) {
+      setFormData(prev => ({ 
+        ...prev, 
+        vehiculeId,
+        vehiculeTitre: vehiculeTitre || '',
+        message: vehiculeTitre 
+          ? `Je suis intéressé(e) par le véhicule: ${vehiculeTitre} (Réf: ${vehiculeId}). Merci de me contacter pour plus d'informations.`
+          : prev.message
+      }));
+    }
+  }, [location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -34,6 +60,8 @@ const ContactForm = () => {
         email: '',
         telephone: '',
         message: '',
+        vehiculeId: '',
+        vehiculeTitre: ''
       });
       
       setIsSubmitting(false);
@@ -42,17 +70,29 @@ const ContactForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {formData.vehiculeId && (
+        <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-3">
+            <Car className="text-mercedes-blue h-5 w-5" />
+            <div>
+              <Label>Référence véhicule</Label>
+              <p className="font-medium">{formData.vehiculeTitre || formData.vehiculeId}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">
             Nom complet
-          </label>
-          <input
+          </Label>
+          <Input
             id="nom"
             name="nom"
             type="text"
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
             placeholder="Votre nom"
             value={formData.nom}
             onChange={handleChange}
@@ -60,15 +100,15 @@ const ContactForm = () => {
         </div>
         
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Email
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             name="email"
             type="email"
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
             placeholder="votre@email.com"
             value={formData.email}
             onChange={handleChange}
@@ -77,14 +117,14 @@ const ContactForm = () => {
       </div>
       
       <div>
-        <label htmlFor="telephone" className="block text-sm font-medium text-gray-700 mb-1">
+        <Label htmlFor="telephone" className="block text-sm font-medium text-gray-700 mb-1">
           Téléphone
-        </label>
-        <input
+        </Label>
+        <Input
           id="telephone"
           name="telephone"
           type="tel"
-          className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
           placeholder="+213 123 456 789"
           value={formData.telephone}
           onChange={handleChange}
@@ -92,15 +132,15 @@ const ContactForm = () => {
       </div>
       
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+        <Label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
           Message
-        </label>
+        </Label>
         <textarea
           id="message"
           name="message"
           rows={5}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors resize-none"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors resize-none"
           placeholder="Votre message ici..."
           value={formData.message}
           onChange={handleChange}
@@ -108,10 +148,10 @@ const ContactForm = () => {
       </div>
       
       <div>
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          className="mercedes-button w-full flex items-center justify-center"
+          className="w-full bg-mercedes-darkgray hover:bg-mercedes-black text-white py-3 rounded-md font-medium transition-colors"
         >
           {isSubmitting ? (
             <>
@@ -124,7 +164,7 @@ const ContactForm = () => {
           ) : (
             'Envoyer le message'
           )}
-        </button>
+        </Button>
       </div>
     </form>
   );
