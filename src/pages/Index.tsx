@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Truck, UserCheck, ChevronRight, Star } from "lucide-react";
@@ -6,6 +5,7 @@ import CarCarousel from "@/components/CarCarousel";
 import ScrollReveal from "@/components/ScrollReveal";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import VideoPanel from "@/components/VideoPanel";
 
 const carouselItems = [
   {
@@ -80,6 +80,8 @@ const HomePage = () => {
       <Navbar />
       
       <main>
+        <VideoPanel />
+        
         <section className="pt-16">
           <CarCarousel items={carouselItems} />
         </section>
