@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface CarouselItem {
   id: number;
@@ -23,6 +24,7 @@ const CarCarousel = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   const prev = () => {
     if (isAnimating) return;
@@ -71,72 +73,91 @@ const CarCarousel = ({
     }
   };
 
+  const goToSlide = (index: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrentIndex(index);
+    setTimeout(() => setIsAnimating(false), 700);
+  };
+
   return (
-    <div 
-      className="relative overflow-hidden h-[500px] md:h-[600px] lg:h-[700px] w-full"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="relative">
+      {/* Main carousel area */}
       <div 
-        className="flex transition-transform duration-700 ease-in-out h-full"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        ref={carouselRef}
+        className="relative overflow-hidden"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        {items.map((item) => (
-          <div key={item.id} className="min-w-full h-full relative">
-            <img 
-              src={item.image} 
-              alt={item.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/70 flex items-end">
-              <div className="container mx-auto px-4 pb-16 md:pb-24">
-                <div className="max-w-3xl">
-                  <h2 className="text-white text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">
-                    {item.title}
-                  </h2>
-                  <p className="text-white/80 text-lg md:text-xl mb-6">
-                    {item.description}
-                  </p>
-                  <button className="mercedes-button">
-                    En savoir plus
-                  </button>
+        {/* Slides container */}
+        <div 
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {items.map((item) => (
+            <div key={item.id} className="min-w-full relative">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                {/* Image section */}
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Content section */}
+                <div className="p-6">
+                  <Card className="border-none shadow-none bg-transparent">
+                    <CardHeader className="px-0">
+                      <CardTitle className="text-2xl md:text-3xl font-serif mb-2">
+                        {item.title}
+                      </CardTitle>
+                      <CardDescription className="text-base">
+                        {item.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="px-0 pt-4">
+                      <button className="mercedes-button">
+                        En savoir plus
+                      </button>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       
       {/* Navigation buttons */}
-      <div className="absolute inset-0 flex items-center justify-between px-4">
+      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex items-center justify-between px-4">
         <button 
           onClick={prev}
-          className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-mercedes-blue/80 transition-colors"
+          className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-mercedes-blue/80 transition-colors z-10"
+          aria-label="Précédent"
         >
           <ChevronLeft size={24} />
         </button>
         <button 
           onClick={next}
-          className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-mercedes-blue/80 transition-colors"
+          className="p-2 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-mercedes-blue/80 transition-colors z-10"
+          aria-label="Suivant"
         >
           <ChevronRight size={24} />
         </button>
       </div>
       
       {/* Indicators */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-2">
+      <div className="flex justify-center mt-4 space-x-2">
         {items.map((_, i) => (
           <button
             key={i}
-            onClick={() => {
-              if (isAnimating) return;
-              setIsAnimating(true);
-              setCurrentIndex(i);
-              setTimeout(() => setIsAnimating(false), 700);
-            }}
+            onClick={() => goToSlide(i)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              i === currentIndex ? 'bg-mercedes-blue w-6' : 'bg-white/50 hover:bg-white'
+              i === currentIndex ? 'bg-mercedes-blue w-6' : 'bg-gray-300 hover:bg-gray-400'
             }`}
+            aria-label={`Aller au slide ${i + 1}`}
           />
         ))}
       </div>

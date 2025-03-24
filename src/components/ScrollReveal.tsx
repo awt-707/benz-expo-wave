@@ -4,9 +4,16 @@ import { useEffect, useRef } from "react";
 interface ScrollRevealProps {
   children: React.ReactNode;
   delay?: number;
+  direction?: "up" | "down" | "left" | "right";
+  distance?: number;
 }
 
-const ScrollReveal = ({ children, delay = 0 }: ScrollRevealProps) => {
+const ScrollReveal = ({ 
+  children, 
+  delay = 0, 
+  direction = "up", 
+  distance = 50 
+}: ScrollRevealProps) => {
   const revealRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +36,9 @@ const ScrollReveal = ({ children, delay = 0 }: ScrollRevealProps) => {
     );
 
     if (revealRef.current) {
+      // Apply the direction-specific class
+      revealRef.current.classList.add(`reveal-${direction}`);
+      revealRef.current.style.setProperty("--reveal-distance", `${distance}px`);
       observer.observe(revealRef.current);
     }
 
@@ -37,7 +47,7 @@ const ScrollReveal = ({ children, delay = 0 }: ScrollRevealProps) => {
         observer.unobserve(revealRef.current);
       }
     };
-  }, [delay]);
+  }, [delay, direction, distance]);
 
   return (
     <div ref={revealRef} className="reveal">
