@@ -42,7 +42,7 @@ const VideoPanel = () => {
       
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover brightness-110 contrast-110"
         playsInline
         muted
         preload="auto"
@@ -60,26 +60,20 @@ const VideoPanel = () => {
           <p className="text-xl md:text-2xl max-w-3xl text-center mb-12 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
             Découvrez notre sélection de véhicules d'exception
           </p>
-          <div className="flex justify-center">
-            <button 
-              onClick={togglePlay}
-              className="flex items-center gap-2 bg-mercedes-blue hover:bg-mercedes-blue/90 px-8 py-4 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              {isPlaying ? (
-                <>
-                  <PauseCircle size={24} />
-                  <span className="font-medium tracking-wide">Pause</span>
-                </>
-              ) : (
-                <>
-                  <PlayCircle size={24} />
-                  <span className="font-medium tracking-wide">Voir la vidéo</span>
-                </>
-              )}
-            </button>
-          </div>
         </ScrollReveal>
       </div>
+      
+      <button 
+        onClick={togglePlay}
+        className="absolute bottom-8 left-8 z-30 bg-transparent hover:bg-mercedes-blue/20 rounded-full transition-all duration-300"
+        aria-label={isPlaying ? "Pause la vidéo" : "Jouer la vidéo"}
+      >
+        {isPlaying ? (
+          <PauseCircle size={48} className="text-white/80 hover:text-white transition-colors" />
+        ) : (
+          <PlayCircle size={48} className="text-white/80 hover:text-white transition-colors" />
+        )}
+      </button>
     </section>
   );
 };
