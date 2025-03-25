@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -86,18 +87,38 @@
   }
 }
 
+/* Standardized animation system */
 .reveal {
   position: relative;
-  transform: translateY(50px);
   opacity: 0;
-  transition: all 1s ease;
+  transition-property: transform, opacity;
+  transition-duration: var(--reveal-duration, 1000ms);
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, opacity;
 }
 
 .reveal.active {
-  transform: translateY(0);
   opacity: 1;
+  transform: translate(0, 0) !important;
 }
 
+.reveal-up {
+  transform: translateY(var(--reveal-distance, 50px));
+}
+
+.reveal-down {
+  transform: translateY(calc(var(--reveal-distance, 50px) * -1));
+}
+
+.reveal-left {
+  transform: translateX(var(--reveal-distance, 50px));
+}
+
+.reveal-right {
+  transform: translateX(calc(var(--reveal-distance, 50px) * -1));
+}
+
+/* Other existing styles */
 .carousel-container {
   overflow: hidden;
   width: 100%;

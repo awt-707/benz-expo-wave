@@ -35,7 +35,7 @@ const HomeFeatures = () => {
   return (
     <section className="py-24 bg-gradient-to-b from-mercedes-darkblue/5 to-white">
       <div className="container mx-auto px-4">
-        <ScrollReveal>
+        <ScrollReveal duration={800}>
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4 text-mercedes-black">
               Exportation de Véhicules Premium
@@ -51,9 +51,10 @@ const HomeFeatures = () => {
           {features.map((feature, index) => (
             <ScrollReveal 
               key={feature.title} 
-              delay={index * 200} 
-              direction={index % 2 === 0 ? "up" : "right"}
-              distance={80}
+              delay={index * 150} 
+              direction="up"
+              distance={40}
+              duration={800}
             >
               <div 
                 className={`bg-white p-8 shadow-2xl hover:shadow-2xl transition-all duration-500 text-center rounded-sm border-t-4 ${index === activeIndex ? 'border-mercedes-darkblue scale-105' : 'border-mercedes-blue'} hover:scale-105 hover:border-mercedes-darkblue`}

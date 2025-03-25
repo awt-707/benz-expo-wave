@@ -30,7 +30,7 @@ const HomeTestimonials = () => {
   return (
     <section className="py-24 bg-mercedes-black text-white">
       <div className="container mx-auto px-4">
-        <ScrollReveal>
+        <ScrollReveal duration={800}>
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4">
               Ce que nos clients disent
@@ -44,7 +44,13 @@ const HomeTestimonials = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <ScrollReveal key={testimonial.id} delay={index * 150}>
+            <ScrollReveal 
+              key={testimonial.id} 
+              delay={index * 150} 
+              direction="up"
+              distance={40}
+              duration={800}
+            >
               <div className="bg-mercedes-darkgray p-8 hover:shadow-lg hover:shadow-mercedes-blue/20 transition-all duration-300 border-l-2 border-mercedes-blue">
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (

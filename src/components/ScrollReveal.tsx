@@ -6,13 +6,15 @@ interface ScrollRevealProps {
   delay?: number;
   direction?: "up" | "down" | "left" | "right";
   distance?: number;
+  duration?: number;
 }
 
 const ScrollReveal = ({ 
   children, 
   delay = 0, 
   direction = "up", 
-  distance = 50 
+  distance = 50,
+  duration = 1000
 }: ScrollRevealProps) => {
   const revealRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +41,7 @@ const ScrollReveal = ({
       // Apply the direction-specific class
       revealRef.current.classList.add(`reveal-${direction}`);
       revealRef.current.style.setProperty("--reveal-distance", `${distance}px`);
+      revealRef.current.style.setProperty("--reveal-duration", `${duration}ms`);
       observer.observe(revealRef.current);
     }
 
@@ -47,7 +50,7 @@ const ScrollReveal = ({
         observer.unobserve(revealRef.current);
       }
     };
-  }, [delay, direction, distance]);
+  }, [delay, direction, distance, duration]);
 
   return (
     <div ref={revealRef} className="reveal">

@@ -9,7 +9,7 @@ const HomeAbout = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-12 md:mb-0 md:pr-16">
-            <ScrollReveal>
+            <ScrollReveal direction="left" duration={800} distance={40}>
               <h2 className="text-3xl md:text-5xl font-serif font-bold mb-6 text-mercedes-black">
                 Pourquoi choisir -3ans DZ?
               </h2>
@@ -50,7 +50,7 @@ const HomeAbout = () => {
           </div>
           
           <div className="md:w-1/2">
-            <ScrollReveal delay={200}>
+            <ScrollReveal direction="right" delay={200} duration={800} distance={40}>
               <div className="relative">
                 <div className="absolute -top-6 -left-6 w-32 h-32 border-2 border-mercedes-blue z-0"></div>
                 <img 
