@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -16,8 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Car, Euro, Fuel, Gauge, Info, Share2, ShieldCheck } from "lucide-react";
 import ScrollReveal from "@/components/ScrollReveal";
+import { useToast } from "@/hooks/use-toast";
 
-// Sample vehicle data - in a real app, this would come from an API
 const vehicles = [
   {
     id: "classe-c",
@@ -199,6 +198,7 @@ const VehicleDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [vehicle, setVehicle] = useState<any>(null);
+  const { toast } = useToast();
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -243,8 +243,27 @@ const VehicleDetailsPage = () => {
   };
   
   const handleReserve = () => {
-    // Navigate to contact page with vehicle reference
     navigate(`/contact?vehicule=${vehicle.id}&titre=${encodeURIComponent(vehicle.title)}`);
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url)
+      .then(() => {
+        toast({
+          title: "Lien copié!",
+          description: "Le lien de la fiche a été copié dans le presse-papier.",
+          duration: 3000,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de copier le lien. Veuillez réessayer.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      });
   };
 
   return (
@@ -401,7 +420,7 @@ const VehicleDetailsPage = () => {
                           </Button>
                           
                           <div className="mt-4 flex justify-center">
-                            <Button variant="outline" className="flex items-center">
+                            <Button variant="outline" className="flex items-center" onClick={handleShare}>
                               <Share2 className="mr-2 h-4 w-4" />
                               Partager
                             </Button>

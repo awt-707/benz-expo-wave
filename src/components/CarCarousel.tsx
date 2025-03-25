@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Link } from 'react-router-dom';
 
 interface CarouselItem {
   id: number;
@@ -118,9 +119,12 @@ const CarCarousel = ({
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="px-0 pt-4">
-                      <button className="mercedes-button">
+                      <Link 
+                        to={`/vehicules/${item.id === 1 ? 'classe-c' : item.id === 2 ? 'classe-e' : 'gle'}`} 
+                        className="mercedes-button"
+                      >
                         En savoir plus
-                      </button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
