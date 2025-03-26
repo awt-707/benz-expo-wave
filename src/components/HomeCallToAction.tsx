@@ -6,7 +6,7 @@ const HomeCallToAction = () => {
   return (
     <section className="py-24 bg-gradient-to-r from-mercedes-darkblue to-mercedes-blue text-white">
       <div className="container mx-auto px-4 text-center">
-        <ScrollReveal duration={800} distance={40}>
+        <ScrollReveal duration={800} distance={40} direction="up" easing="ease-out">
           <h2 className="text-3xl md:text-5xl font-serif font-bold mb-6">
             Prêt à démarrer?
           </h2>

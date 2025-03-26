@@ -7,6 +7,9 @@ interface ScrollRevealProps {
   direction?: "up" | "down" | "left" | "right";
   distance?: number;
   duration?: number;
+  once?: boolean;
+  threshold?: number;
+  easing?: string;
 }
 
 const ScrollReveal = ({ 
@@ -14,7 +17,10 @@ const ScrollReveal = ({
   delay = 0, 
   direction = "up", 
   distance = 50,
-  duration = 1000
+  duration = 1000,
+  once = true,
+  threshold = 0.1,
+  easing = "cubic-bezier(0.5, 0, 0, 1)"
 }: ScrollRevealProps) => {
   const revealRef = useRef<HTMLDivElement>(null);
 
@@ -26,14 +32,20 @@ const ScrollReveal = ({
             setTimeout(() => {
               entry.target.classList.add("active");
             }, delay);
-            observer.unobserve(entry.target);
+            
+            if (once) {
+              observer.unobserve(entry.target);
+            }
+          } else if (!once) {
+            // If not set to once, remove active class when out of view
+            entry.target.classList.remove("active");
           }
         });
       },
       {
         root: null,
         rootMargin: "0px",
-        threshold: 0.1,
+        threshold,
       }
     );
 
@@ -42,6 +54,7 @@ const ScrollReveal = ({
       revealRef.current.classList.add(`reveal-${direction}`);
       revealRef.current.style.setProperty("--reveal-distance", `${distance}px`);
       revealRef.current.style.setProperty("--reveal-duration", `${duration}ms`);
+      revealRef.current.style.setProperty("--reveal-easing", easing);
       observer.observe(revealRef.current);
     }
 
@@ -50,7 +63,7 @@ const ScrollReveal = ({
         observer.unobserve(revealRef.current);
       }
     };
-  }, [delay, direction, distance, duration]);
+  }, [delay, direction, distance, duration, once, threshold, easing]);
 
   return (
     <div ref={revealRef} className="reveal">
