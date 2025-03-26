@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Plus, Pencil, Trash, Eye } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { API_BASE_URL } from '@/services/api';
 
 interface Vehicle {
   _id: string;
@@ -25,7 +26,7 @@ const VehiclesList = () => {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/vehicles`);
+        const response = await fetch(`${API_BASE_URL}/vehicles`);
         const data = await response.json();
         setVehicles(data);
       } catch (error) {
@@ -49,7 +50,7 @@ const VehiclesList = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/vehicles/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GeneralSettings } from './settings/GeneralSettings';
 import { ContactSettings } from './settings/ContactSettings';
 import { VideoSettings } from './settings/VideoSettings';
+import { API_BASE_URL } from '@/services/api';
 
 interface SiteConfigType {
   homeHeroText: string;
@@ -44,7 +45,7 @@ const SiteSettings = () => {
     const fetchConfig = async () => {
       try {
         const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/site-config`, {
+        const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -13,6 +13,46 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
+// Admin API
+export const adminApi = {
+  // Login
+  login: async (credentials: { username: string; password: string }) => {
+    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+    return handleResponse(response);
+  },
+
+  // Get site config
+  getSiteConfig: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  // Update site config
+  updateSiteConfig: async (config: any) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(config),
+    });
+    return handleResponse(response);
+  }
+};
+
 // Vehicles API
 export const vehiclesApi = {
   // Get all vehicles
@@ -31,6 +71,46 @@ export const vehiclesApi = {
   getById: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/vehicles/${id}`);
     return handleResponse(response);
+  },
+
+  // Create vehicle
+  create: async (vehicleData: any) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/vehicles`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(vehicleData),
+    });
+    return handleResponse(response);
+  },
+
+  // Update vehicle
+  update: async (id: string, vehicleData: any) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(vehicleData),
+    });
+    return handleResponse(response);
+  },
+
+  // Delete vehicle
+  delete: async (id: string) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
   }
 };
 
@@ -44,6 +124,29 @@ export const contactApi = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(contactData),
+    });
+    return handleResponse(response);
+  },
+
+  // Get all messages (admin)
+  getMessages: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/contact/messages`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  // Delete message (admin)
+  deleteMessage: async (id: string) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/contact/messages/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return handleResponse(response);
   }
@@ -65,6 +168,17 @@ export const visitorApi = {
       // Silently fail - we don't want to interrupt user experience if tracking fails
       console.error('Error recording visit:', error);
     }
+  },
+
+  // Get visitor stats (admin)
+  getStats: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/visitors/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
   }
 };
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Eye, MessageSquare, Trash, XCircle } from 'lucide-react';
+import { API_BASE_URL } from '@/services/api';
 
 interface Message {
   _id: string;
@@ -30,7 +31,7 @@ const MessagesList = () => {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/contact/messages`, {
+        const response = await fetch(`${API_BASE_URL}/contact/messages`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -69,7 +70,7 @@ const MessagesList = () => {
   const markAsRead = async (id: string) => {
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/contact/messages/${id}/read`, {
+      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}/read`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -94,7 +95,7 @@ const MessagesList = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/contact/messages/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
