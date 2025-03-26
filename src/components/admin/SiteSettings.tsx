@@ -82,7 +82,7 @@ const SiteSettings = () => {
       setConfig({
         ...config,
         [section]: {
-          ...config[section as keyof SiteConfigType],
+          ...(config[section as keyof SiteConfigType] as Record<string, any>),
           [field]: value
         }
       });
