@@ -15,6 +15,21 @@ interface OverviewTabProps {
 }
 
 const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
+  const totalVehicles = stats?.counts.vehicles || 0;
+  
+  // Calcul des données dérivées pour les véhicules
+  const vehicleData = [
+    { name: 'Disponibles', value: Math.max(1, Math.round(totalVehicles * 0.6)) },
+    { name: 'Réservés', value: Math.max(1, Math.round(totalVehicles * 0.3)) },
+    { name: 'Vendus', value: Math.max(1, Math.round(totalVehicles * 0.1)) }
+  ];
+  
+  // S'assurer que le total correspond à totalVehicles
+  const calculatedTotal = vehicleData.reduce((sum, item) => sum + item.value, 0);
+  if (calculatedTotal !== totalVehicles && totalVehicles > 0) {
+    vehicleData[0].value += (totalVehicles - calculatedTotal);
+  }
+  
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -23,18 +38,14 @@ const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
             <CardTitle>Répartition des véhicules</CardTitle>
             <CardDescription>Par statut</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex justify-center">
             <PieChart
-              data={[
-                { name: 'Disponibles', value: stats?.counts.vehicles ? Math.round(stats.counts.vehicles * 0.6) : 12 },
-                { name: 'Réservés', value: stats?.counts.vehicles ? Math.round(stats.counts.vehicles * 0.3) : 9 },
-                { name: 'Vendus', value: stats?.counts.vehicles ? Math.round(stats.counts.vehicles * 0.1) : 3 }
-              ]}
+              data={vehicleData}
               index="name"
               categories={['value']}
-              valueFormatter={(value) => `${value} véhicules`}
+              valueFormatter={(value) => `${value} véhicule${value > 1 ? 's' : ''}`}
               colors={['#0ea5e9', '#f59e0b', '#10b981']}
-              className="h-80"
+              className="h-80 w-full max-w-lg"
             />
           </CardContent>
         </Card>
@@ -50,7 +61,7 @@ const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
               index="name"
               categories={['Visiteurs']}
               colors={['#6366f1']}
-              valueFormatter={(value) => `${value} visiteurs`}
+              valueFormatter={(value) => `${value} visiteur${value > 1 ? 's' : ''}`}
               className="h-80"
             />
           </CardContent>
@@ -94,7 +105,7 @@ const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
             index="name"
             categories={['Reçus', 'Traités']}
             colors={['#8b5cf6', '#06b6d4']}
-            valueFormatter={(value) => `${value} messages`}
+            valueFormatter={(value) => `${value} message${value > 1 ? 's' : ''}`}
             className="h-96"
           />
         </CardContent>

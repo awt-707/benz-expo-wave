@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Car, MessageSquare, Building } from 'lucide-react';
 import { API_BASE_URL } from '@/services/api';
 
-// Import our new components
+// Import our components
 import StatsCard from './dashboard/StatsCard';
 import OverviewTab from './dashboard/OverviewTab';
 import AnalyticsTab from './dashboard/AnalyticsTab';
@@ -39,7 +39,8 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
+        // Cette API n'existe pas encore côté serveur, on devrait utiliser /api/admin/visitors pour le moment
+        const response = await fetch(`${API_BASE_URL}/admin/visitors`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -49,12 +50,45 @@ const Dashboard = () => {
           throw new Error('Erreur lors de la récupération des statistiques');
         }
         
-        const data = await response.json();
-        setStats(data);
+        // Adapter la réponse au format attendu
+        const visitorData = await response.json();
+        
+        // Récupérer les données des véhicules et messages depuis d'autres endpoints
+        const vehiclesResponse = await fetch(`${API_BASE_URL}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        const messagesResponse = await fetch(`${API_BASE_URL}/admin/messages`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        const activitiesResponse = await fetch(`${API_BASE_URL}/admin/activities?limit=5`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (!vehiclesResponse.ok || !messagesResponse.ok || !activitiesResponse.ok) {
+          throw new Error('Erreur lors de la récupération des données');
+        }
+        
+        const vehicles = await vehiclesResponse.json();
+        const messages = await messagesResponse.json();
+        const activities = await activitiesResponse.json();
+        
+        // Construire l'objet stats à partir des différentes réponses
+        setStats({
+          counts: {
+            vehicles: vehicles.length || 0,
+            messages: messages.length || 0,
+            unreadMessages: messages.filter((m: any) => !m.read).length || 0,
+            visitorsToday: visitorData.visitorsLast24Hours || 0,
+            visitorsWeek: visitorData.visitorsLast7Days || 0
+          },
+          recentActivities: activities || []
+        });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
         
-        // Mock data in case of error
+        // Mock data en cas d'erreur
         setStats({
           counts: {
             vehicles: 24,
@@ -74,9 +108,9 @@ const Dashboard = () => {
         });
         
         toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les statistiques réelles. Affichage de données simulées.",
-          variant: "destructive",
+          title: "Données simulées",
+          description: "Utilisation de données simulées en attendant la configuration complète de l'API.",
+          variant: "default",
         });
       } finally {
         setIsLoading(false);
@@ -117,7 +151,7 @@ const Dashboard = () => {
           title="Messages"
           value={stats?.counts.messages || 0}
           icon={<MessageSquare size={20} />}
-          trend={{ value: `${stats?.counts.unreadMessages || 0} non lus`, positive: true }}
+          trend={{ value: `${stats?.counts.unreadMessages || 0} non lus`, positive: false }}
         />
         
         <StatsCard 
@@ -136,7 +170,7 @@ const Dashboard = () => {
       </div>
       
       <Tabs defaultValue="overview">
-        <TabsList>
+        <TabsList className="w-full md:w-auto">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="analytics">Analyse des visiteurs</TabsTrigger>
           <TabsTrigger value="activity">Activité récente</TabsTrigger>
