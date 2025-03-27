@@ -20,6 +20,8 @@ import VehicleForm from './components/admin/VehicleForm';
 import MessagesList from './components/admin/MessagesList';
 import SiteSettings from './components/admin/SiteSettings';
 import MediaManager from './components/admin/MediaManager';
+import ActivityLog from './components/admin/ActivityLog';
+import PageEditor from './components/admin/PageEditor';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
@@ -44,8 +46,10 @@ function App() {
             <Route path="vehicles/add" element={<VehicleForm mode="create" />} />
             <Route path="vehicles/edit/:id" element={<VehicleForm mode="edit" />} />
             <Route path="messages" element={<MessagesList />} />
-            <Route path="settings" element={<SiteSettings />} />
             <Route path="media" element={<MediaManager />} />
+            <Route path="activity" element={<ActivityLog />} />
+            <Route path="pages" element={<PageEditor />} />
+            <Route path="settings" element={<SiteSettings />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

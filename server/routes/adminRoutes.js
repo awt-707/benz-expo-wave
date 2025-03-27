@@ -12,4 +12,13 @@ router.post('/upload-video', verifyToken, adminController.uploadVideo);
 router.get('/site-config', verifyToken, adminController.getSiteConfig);
 router.put('/site-config', verifyToken, adminController.updateSiteConfig);
 
+// Custom pages
+router.put('/custom-page/:pageKey', verifyToken, adminController.updateCustomPage);
+
+// Dashboard stats
+router.get('/dashboard-stats', verifyToken, adminController.getDashboardStats);
+
+// Activity log
+router.get('/activity', verifyToken, adminController.getActivityLog);
+
 module.exports = router;

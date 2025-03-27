@@ -5,23 +5,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GeneralSettings } from './settings/GeneralSettings';
 import { ContactSettings } from './settings/ContactSettings';
 import { VideoSettings } from './settings/VideoSettings';
+import { SEOSettings } from './settings/SEOSettings';
+import { PagesSettings } from './settings/PagesSettings';
 import { API_BASE_URL } from '@/services/api';
-
-interface SiteConfigType {
-  homeHeroText: string;
-  contactInfo: {
-    email: string;
-    phone: string;
-    address: string;
-    workingHours?: string;
-  };
-  socialMedia: {
-    facebook: string;
-    instagram: string;
-    twitter: string;
-  };
-  videoUrl: string;
-}
+import { SiteConfigType } from './settings/settingsUtils';
 
 const defaultConfig: SiteConfigType = {
   homeHeroText: '',
@@ -37,6 +24,12 @@ const defaultConfig: SiteConfigType = {
     twitter: '',
   },
   videoUrl: '',
+  seo: {
+    title: '',
+    description: '',
+    keywords: '',
+  },
+  customPages: {},
 };
 
 const SiteSettings = () => {
@@ -72,6 +65,13 @@ const SiteSettings = () => {
             ...defaultConfig.socialMedia,
             ...(data.socialMedia || {}),
           },
+          seo: {
+            ...defaultConfig.seo,
+            ...(data.seo || {}),
+          },
+          customPages: {
+            ...(data.customPages || {}),
+          },
         };
         
         setConfig(completeConfig);
@@ -105,10 +105,12 @@ const SiteSettings = () => {
       <h1 className="text-3xl font-bold">Configuration du site</h1>
       
       <Tabs defaultValue="general">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="video">Vidéo</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -127,6 +129,20 @@ const SiteSettings = () => {
         
         <TabsContent value="video">
           <VideoSettings 
+            config={config} 
+            onConfigUpdate={handleConfigUpdate} 
+          />
+        </TabsContent>
+
+        <TabsContent value="seo">
+          <SEOSettings 
+            config={config} 
+            onConfigUpdate={handleConfigUpdate} 
+          />
+        </TabsContent>
+
+        <TabsContent value="pages">
+          <PagesSettings 
             config={config} 
             onConfigUpdate={handleConfigUpdate} 
           />

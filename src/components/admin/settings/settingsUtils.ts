@@ -16,6 +16,17 @@ export interface SiteConfigType {
     twitter: string;
   };
   videoUrl: string;
+  seo?: {
+    title: string;
+    description: string;
+    keywords: string;
+    ogImage?: string;
+  };
+  customPages?: Record<string, {
+    title: string;
+    content: string;
+    lastUpdated: string;
+  }>;
 }
 
 export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> => {
@@ -79,6 +90,42 @@ export const uploadVideo = async (videoFile: File): Promise<string | null> => {
       variant: "destructive",
     });
     return null;
+  }
+};
+
+export const saveCustomPage = async (
+  pageKey: string, 
+  pageData: { title: string; content: string }
+): Promise<boolean> => {
+  try {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(pageData),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la sauvegarde de la page');
+    }
+    
+    toast({
+      title: "Page sauvegardée",
+      description: "La page a été enregistrée avec succès.",
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving custom page:', error);
+    toast({
+      title: "Erreur",
+      description: "Impossible de sauvegarder la page.",
+      variant: "destructive",
+    });
+    return false;
   }
 };
 

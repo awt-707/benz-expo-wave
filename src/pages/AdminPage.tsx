@@ -12,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Layers, Car, MessageSquare, Settings, LogOut, Image, FileText } from 'lucide-react';
+import { Layers, Car, MessageSquare, Settings, LogOut, Image, FileText, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdminLogin from '@/components/admin/AdminLogin';
 
@@ -72,6 +72,24 @@ const AdminPage = () => {
                 >
                   <Image className="h-5 w-5" />
                   <span>Médias</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/activity' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/activity')}
+                >
+                  <Activity className="h-5 w-5" />
+                  <span>Activité</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/pages' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/pages')}
+                >
+                  <FileText className="h-5 w-5" />
+                  <span>Pages</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
