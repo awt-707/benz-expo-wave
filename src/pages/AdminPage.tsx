@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { 
   SidebarProvider, 
   Sidebar, 
@@ -12,12 +12,13 @@ import {
   SidebarMenuButton,
   SidebarSeparator
 } from '@/components/ui/sidebar';
-import { Layers, Car, MessageSquare, Settings, LogOut } from 'lucide-react';
+import { Layers, Car, MessageSquare, Settings, LogOut, Image, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdminLogin from '@/components/admin/AdminLogin';
 
 const AdminPage = () => {
   const [token, setToken] = useState(localStorage.getItem('adminToken'));
+  const navigate = useNavigate();
   
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -38,35 +39,48 @@ const AdminPage = () => {
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Tableau de bord">
-                  <a href="/admin/dashboard">
-                    <Layers className="h-5 w-5" />
-                    <span>Tableau de bord</span>
-                  </a>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/dashboard' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/dashboard')}
+                >
+                  <Layers className="h-5 w-5" />
+                  <span>Tableau de bord</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Véhicules">
-                  <a href="/admin/vehicles">
-                    <Car className="h-5 w-5" />
-                    <span>Véhicules</span>
-                  </a>
+                <SidebarMenuButton 
+                  className={window.location.pathname.startsWith('/admin/vehicles') ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/vehicles')}
+                >
+                  <Car className="h-5 w-5" />
+                  <span>Véhicules</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Messages">
-                  <a href="/admin/messages">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Messages</span>
-                  </a>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/messages' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/messages')}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Messages</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Configuration">
-                  <a href="/admin/settings">
-                    <Settings className="h-5 w-5" />
-                    <span>Configuration</span>
-                  </a>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/media' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/media')}
+                >
+                  <Image className="h-5 w-5" />
+                  <span>Médias</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  className={window.location.pathname === '/admin/settings' ? 'bg-gray-100' : ''}
+                  onClick={() => navigate('/admin/settings')}
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Configuration</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

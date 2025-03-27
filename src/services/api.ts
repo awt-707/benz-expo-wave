@@ -2,7 +2,7 @@
 // API service for communicating with our backend
 
 // Base URL for API requests
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
@@ -111,6 +111,30 @@ export const vehiclesApi = {
       },
     });
     return handleResponse(response);
+  },
+
+  // Upload images
+  uploadImages: async (id: string | null, images: File[]) => {
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData();
+    
+    images.forEach(image => {
+      formData.append('images', image);
+    });
+    
+    const endpoint = id 
+      ? `${API_BASE_URL}/vehicles/upload/${id}`
+      : `${API_BASE_URL}/vehicles/upload`;
+      
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    
+    return handleResponse(response);
   }
 };
 
@@ -131,7 +155,19 @@ export const contactApi = {
   // Get all messages (admin)
   getMessages: async () => {
     const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/contact/messages`, {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  // Mark message as responded
+  markResponded: async (id: string) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/contact/${id}/respond`, {
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -142,12 +178,56 @@ export const contactApi = {
   // Delete message (admin)
   deleteMessage: async (id: string) => {
     const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/contact/messages/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    return handleResponse(response);
+  }
+};
+
+// Media API
+export const mediaApi = {
+  // Get all media
+  getAll: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/media`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+  
+  // Upload media
+  upload: async (file: File) => {
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData();
+    formData.append('media', file);
+    
+    const response = await fetch(`${API_BASE_URL}/media/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    
+    return handleResponse(response);
+  },
+  
+  // Delete media
+  delete: async (filename: string) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/media/${filename}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
     return handleResponse(response);
   }
 };

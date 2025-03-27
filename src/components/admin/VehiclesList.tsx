@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -13,7 +14,9 @@ interface Vehicle {
   model: string;
   year: number;
   price: number;
-  mileage: number;
+  specifications?: {
+    mileage: number;
+  };
   status: 'available' | 'sold' | 'reserved';
   images: string[];
 }
@@ -22,6 +25,7 @@ const VehiclesList = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -75,11 +79,19 @@ const VehiclesList = () => {
     }
   };
 
+  const handleAddVehicle = () => {
+    navigate('/admin/vehicles/add');
+  };
+
+  const handleEditVehicle = (id: string) => {
+    navigate(`/admin/vehicles/edit/${id}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Véhicules</h1>
-        <Button>
+        <Button onClick={handleAddVehicle}>
           <Plus className="mr-2 h-4 w-4" /> Ajouter un véhicule
         </Button>
       </div>
@@ -96,7 +108,8 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles} 
             isLoading={isLoading} 
-            onDelete={handleDeleteVehicle} 
+            onDelete={handleDeleteVehicle}
+            onEdit={handleEditVehicle}
           />
         </TabsContent>
         
@@ -104,7 +117,8 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'available')} 
             isLoading={isLoading} 
-            onDelete={handleDeleteVehicle} 
+            onDelete={handleDeleteVehicle}
+            onEdit={handleEditVehicle}
           />
         </TabsContent>
         
@@ -112,7 +126,8 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'sold')} 
             isLoading={isLoading} 
-            onDelete={handleDeleteVehicle} 
+            onDelete={handleDeleteVehicle}
+            onEdit={handleEditVehicle}
           />
         </TabsContent>
         
@@ -120,7 +135,8 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'reserved')} 
             isLoading={isLoading} 
-            onDelete={handleDeleteVehicle} 
+            onDelete={handleDeleteVehicle}
+            onEdit={handleEditVehicle}
           />
         </TabsContent>
       </Tabs>
@@ -132,9 +148,10 @@ interface VehicleTableProps {
   vehicles: Vehicle[];
   isLoading: boolean;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
-const VehicleTable: React.FC<VehicleTableProps> = ({ vehicles, isLoading, onDelete }) => {
+const VehicleTable: React.FC<VehicleTableProps> = ({ vehicles, isLoading, onDelete, onEdit }) => {
   if (isLoading) {
     return <div className="text-center py-4">Chargement...</div>;
   }
@@ -164,7 +181,11 @@ const VehicleTable: React.FC<VehicleTableProps> = ({ vehicles, isLoading, onDele
               <TableCell>{vehicle.model}</TableCell>
               <TableCell>{vehicle.year}</TableCell>
               <TableCell>{vehicle.price.toLocaleString('fr-FR')} €</TableCell>
-              <TableCell>{vehicle.mileage.toLocaleString('fr-FR')} km</TableCell>
+              <TableCell>
+                {vehicle.specifications?.mileage 
+                  ? `${vehicle.specifications.mileage.toLocaleString('fr-FR')} km`
+                  : 'N/A'}
+              </TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   vehicle.status === 'available' ? 'bg-green-100 text-green-800' :
@@ -182,7 +203,7 @@ const VehicleTable: React.FC<VehicleTableProps> = ({ vehicles, isLoading, onDele
                       <Eye className="h-4 w-4" />
                     </a>
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(vehicle._id)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => onDelete(vehicle._id)}>

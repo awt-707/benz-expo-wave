@@ -16,8 +16,10 @@ import NotFound from './pages/NotFound';
 import AdminPage from './pages/AdminPage';
 import Dashboard from './components/admin/Dashboard';
 import VehiclesList from './components/admin/VehiclesList';
+import VehicleForm from './components/admin/VehicleForm';
 import MessagesList from './components/admin/MessagesList';
 import SiteSettings from './components/admin/SiteSettings';
+import MediaManager from './components/admin/MediaManager';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
@@ -39,8 +41,11 @@ function App() {
             <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="vehicles" element={<VehiclesList />} />
+            <Route path="vehicles/add" element={<VehicleForm mode="create" />} />
+            <Route path="vehicles/edit/:id" element={<VehicleForm mode="edit" />} />
             <Route path="messages" element={<MessagesList />} />
             <Route path="settings" element={<SiteSettings />} />
+            <Route path="media" element={<MediaManager />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

@@ -8,6 +8,7 @@ const vehicleRoutes = require('./routes/vehicleRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const visitorRoutes = require('./routes/visitorRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/visitors', visitorRoutes);
+app.use('/api/media', mediaRoutes);
 
 // Base route
 app.get('/', (req, res) => {
