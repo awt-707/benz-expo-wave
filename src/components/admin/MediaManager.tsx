@@ -153,9 +153,11 @@ const MediaManager = () => {
             onChange={handleUpload}
             accept="image/*"
           />
-          <Button as="label" htmlFor="media-upload" disabled={uploadLoading}>
-            <Upload className="mr-2 h-4 w-4" />
-            {uploadLoading ? 'Téléchargement...' : 'Télécharger un média'}
+          <Button asChild disabled={uploadLoading}>
+            <label htmlFor="media-upload">
+              <Upload className="mr-2 h-4 w-4" />
+              {uploadLoading ? 'Téléchargement...' : 'Télécharger un média'}
+            </label>
           </Button>
         </div>
       </div>

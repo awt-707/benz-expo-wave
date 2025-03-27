@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -201,13 +200,11 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ mode = 'create' }) => {
       const data = await response.json();
       
       if (id && data.images) {
-        // Si c'est une mise à jour d'un véhicule existant
         setVehicle(prev => ({
           ...prev,
           images: data.images
         }));
       } else {
-        // Si c'est un nouveau véhicule ou juste un téléchargement d'images
         setVehicle(prev => ({
           ...prev,
           images: [...prev.images, ...(Array.isArray(data) ? data : [data.url])]
@@ -226,7 +223,6 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ mode = 'create' }) => {
       });
     } finally {
       setUploadLoading(false);
-      // Réinitialiser l'input file
       e.target.value = '';
     }
   };
@@ -267,7 +263,6 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ mode = 'create' }) => {
         description: `Véhicule ${mode === 'edit' ? 'modifié' : 'ajouté'} avec succès`,
       });
       
-      // Rediriger vers la liste des véhicules
       navigate('/admin/vehicles');
     } catch (error) {
       toast({
@@ -538,9 +533,11 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ mode = 'create' }) => {
                 accept="image/*"
                 multiple
               />
-              <Button as="label" htmlFor="images-upload" disabled={uploadLoading}>
-                <Upload className="mr-2 h-4 w-4" />
-                {uploadLoading ? 'Téléchargement...' : 'Télécharger des images'}
+              <Button asChild disabled={uploadLoading}>
+                <label htmlFor="images-upload">
+                  <Upload className="mr-2 h-4 w-4" />
+                  {uploadLoading ? 'Téléchargement...' : 'Télécharger des images'}
+                </label>
               </Button>
             </div>
             
