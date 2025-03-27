@@ -60,7 +60,7 @@ const ActivityLog = () => {
           let details = '';
           if (type === 'vehicle') details = ['BMW X5', 'Audi A3', 'Mercedes C200', 'Renault Clio'][Math.floor(Math.random() * 4)];
           if (type === 'message') details = ['Question sur disponibilité', 'Demande de prix', 'Prise de RDV'][Math.floor(Math.random() * 3)];
-          if (type === 'visitor') details = [`${Math.floor(Math.random() * 50) + 10} visiteurs à ${Math.floor(Math.random() * 24)}h`];
+          if (type === 'visitor') details = `${Math.floor(Math.random() * 50) + 10} visiteurs à ${Math.floor(Math.random() * 24)}h`;
           if (type === 'admin') details = ['admin', 'mohamed', 'commercial'][Math.floor(Math.random() * 3)];
           
           return {
