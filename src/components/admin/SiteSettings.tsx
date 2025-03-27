@@ -13,6 +13,7 @@ interface SiteConfigType {
     email: string;
     phone: string;
     address: string;
+    workingHours?: string;
   };
   socialMedia: {
     facebook: string;
@@ -22,22 +23,24 @@ interface SiteConfigType {
   videoUrl: string;
 }
 
+const defaultConfig: SiteConfigType = {
+  homeHeroText: '',
+  contactInfo: {
+    email: '',
+    phone: '',
+    address: '',
+    workingHours: '',
+  },
+  socialMedia: {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+  },
+  videoUrl: '',
+};
+
 const SiteSettings = () => {
-  const [config, setConfig] = useState<SiteConfigType>({
-    homeHeroText: '',
-    contactInfo: {
-      email: '',
-      phone: '',
-      address: '',
-    },
-    socialMedia: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-    },
-    videoUrl: '',
-  });
-  
+  const [config, setConfig] = useState<SiteConfigType>(defaultConfig);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -56,7 +59,22 @@ const SiteSettings = () => {
         }
         
         const data = await response.json();
-        setConfig(data);
+        
+        // Ensure all required properties exist
+        const completeConfig = {
+          ...defaultConfig,
+          ...data,
+          contactInfo: {
+            ...defaultConfig.contactInfo,
+            ...(data.contactInfo || {}),
+          },
+          socialMedia: {
+            ...defaultConfig.socialMedia,
+            ...(data.socialMedia || {}),
+          },
+        };
+        
+        setConfig(completeConfig);
       } catch (error) {
         toast({
           title: "Erreur",

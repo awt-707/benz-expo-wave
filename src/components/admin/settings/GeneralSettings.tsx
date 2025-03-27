@@ -62,7 +62,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ config, onConf
           <Textarea
             id="homeHeroText"
             name="homeHeroText"
-            value={config.homeHeroText}
+            value={config.homeHeroText || ''}
             onChange={handleChange}
             rows={4}
             placeholder="Texte principal sur la page d'accueil"
@@ -77,7 +77,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ config, onConf
                 <Label htmlFor="facebook">Facebook</Label>
                 <Input
                   id="facebook"
-                  value={config.socialMedia.facebook}
+                  value={config.socialMedia?.facebook || ''}
                   onChange={(e) => handleChange(e, 'socialMedia', 'facebook')}
                   placeholder="URL Facebook"
                 />
@@ -86,7 +86,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ config, onConf
                 <Label htmlFor="instagram">Instagram</Label>
                 <Input
                   id="instagram"
-                  value={config.socialMedia.instagram}
+                  value={config.socialMedia?.instagram || ''}
                   onChange={(e) => handleChange(e, 'socialMedia', 'instagram')}
                   placeholder="URL Instagram"
                 />
@@ -95,7 +95,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ config, onConf
                 <Label htmlFor="twitter">Twitter</Label>
                 <Input
                   id="twitter"
-                  value={config.socialMedia.twitter}
+                  value={config.socialMedia?.twitter || ''}
                   onChange={(e) => handleChange(e, 'socialMedia', 'twitter')}
                   placeholder="URL Twitter"
                 />

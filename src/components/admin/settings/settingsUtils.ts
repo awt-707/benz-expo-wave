@@ -8,6 +8,7 @@ export interface SiteConfigType {
     email: string;
     phone: string;
     address: string;
+    workingHours?: string;
   };
   socialMedia: {
     facebook: string;
