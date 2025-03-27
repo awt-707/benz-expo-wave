@@ -1,4 +1,3 @@
-
 // API service for communicating with our backend
 
 // Base URL for API requests
@@ -48,6 +47,42 @@ export const adminApi = {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(config),
+    });
+    return handleResponse(response);
+  },
+  
+  // Get dashboard stats
+  getDashboardStats: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+  
+  // Get activity log
+  getActivityLog: async () => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/activity`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+  
+  // Save custom page
+  saveCustomPage: async (pageKey: string, pageData: any) => {
+    const token = localStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(pageData),
     });
     return handleResponse(response);
   }

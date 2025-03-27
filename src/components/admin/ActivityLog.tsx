@@ -10,7 +10,7 @@ import { Car, MessageSquare, Users, User, Clock, Download } from 'lucide-react';
 import { API_BASE_URL } from '@/services/api';
 
 interface Activity {
-  id: string;
+  _id: string;
   type: 'vehicle' | 'message' | 'visitor' | 'admin';
   action: string;
   timestamp: string;
@@ -43,6 +43,11 @@ const ActivityLog = () => {
         setActivities(data);
       } catch (error) {
         console.error('Error fetching activities:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les activités. Utilisation de données simulées.",
+          variant: "destructive",
+        });
         
         // Données simulées en cas d'erreur
         const mockActivities: Activity[] = Array.from({ length: 20 }).map((_, index) => {
@@ -64,7 +69,7 @@ const ActivityLog = () => {
           if (type === 'admin') details = ['admin', 'mohamed', 'commercial'][Math.floor(Math.random() * 3)];
           
           return {
-            id: (index + 1).toString(),
+            _id: (index + 1).toString(),
             type,
             action,
             timestamp,
@@ -210,7 +215,7 @@ const ActivityLog = () => {
           ) : (
             <div className="space-y-4">
               {filteredActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
+                <div key={activity._id} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/10 transition-colors">
                   <div className={`p-2 rounded-full flex-shrink-0 ${getActivityBackground(activity.type)}`}>
                     {getActivityIcon(activity.type)}
                   </div>
