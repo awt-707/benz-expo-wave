@@ -14,13 +14,20 @@ interface StatsCardProps {
 }
 
 const StatsCard = ({ title, value, icon, trend }: StatsCardProps) => {
+  // Fonction pour formater les valeurs avec pluralisation
+  const formatValue = (val: number): string => {
+    if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
+    return val.toLocaleString('fr-FR');
+  };
+
   return (
     <Card className="transition-all duration-300 hover:shadow-md">
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-3xl font-bold">{value.toLocaleString()}</p>
+            <p className="text-3xl font-bold">{formatValue(value)}</p>
           </div>
           <div className="p-2 bg-primary/10 text-primary rounded-full">
             {icon}
@@ -29,13 +36,13 @@ const StatsCard = ({ title, value, icon, trend }: StatsCardProps) => {
         {trend && (
           <div className="flex items-center mt-4">
             {trend.positive ? (
-              <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+              <ArrowUpRight className="h-4 w-4 text-emerald-500 mr-1" />
             ) : (
               <ArrowDownRight className="h-4 w-4 text-amber-500 mr-1" />
             )}
             <span 
               className={`text-xs font-medium ${
-                trend.positive ? 'text-green-500' : 'text-amber-500'
+                trend.positive ? 'text-emerald-500' : 'text-amber-500'
               }`}
             >
               {trend.value}

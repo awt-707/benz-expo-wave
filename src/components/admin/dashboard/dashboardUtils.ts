@@ -28,47 +28,52 @@ export const generateVisitorData = (visitorsToday: number) => {
 export const formatDate = (timestamp: string, format: 'short' | 'long' | 'full' = 'short'): string => {
   const date = new Date(timestamp);
   
-  switch (format) {
-    case 'short':
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-      });
-      
-    case 'long':
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      
-    case 'full':
-      return date.toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'long', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      
-    default:
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+  try {
+    switch (format) {
+      case 'short':
+        return new Intl.DateTimeFormat('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+        }).format(date);
+        
+      case 'long':
+        return new Intl.DateTimeFormat('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+        
+      case 'full':
+        return new Intl.DateTimeFormat('fr-FR', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+        
+      default:
+        return new Intl.DateTimeFormat('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
+    }
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date invalide';
   }
 };
 
-// Ajoute une fonction pour calculer la différence en pourcentage
+// Amélioration de la fonction pour calculer la différence en pourcentage
 export const calculatePercentageDifference = (current: number, previous: number): string => {
   if (previous === 0) return "+100%";
   
   const difference = current - previous;
   const percentage = (difference / previous) * 100;
   
-  return `${percentage > 0 ? '+' : ''}${percentage.toFixed(0)}%`;
+  return `${percentage > 0 ? '+' : ''}${percentage.toFixed(1)}%`;
 };

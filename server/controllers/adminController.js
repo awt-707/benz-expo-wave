@@ -21,7 +21,7 @@ exports.login = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { username },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'your-jwt-secret',
       { expiresIn: '24h' }
     );
     
@@ -56,7 +56,9 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, `site-video${path.extname(file.originalname)}`);
+    // Ajout d'un timestamp pour éviter les problèmes de cache
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `site-video-${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
 
@@ -143,11 +145,13 @@ exports.updateSiteConfig = async (req, res) => {
     }
     
     // Update fields
-    if (req.body.homeHeroText) siteConfig.homeHeroText = req.body.homeHeroText;
-    if (req.body.contactInfo) siteConfig.contactInfo = req.body.contactInfo;
-    if (req.body.socialMedia) siteConfig.socialMedia = req.body.socialMedia;
-    if (req.body.seo) siteConfig.seo = req.body.seo;
-    if (req.body.videoUrl) siteConfig.videoUrl = req.body.videoUrl;
+    const { homeHeroText, contactInfo, socialMedia, seo, videoUrl } = req.body;
+    
+    if (homeHeroText !== undefined) siteConfig.homeHeroText = homeHeroText;
+    if (contactInfo !== undefined) siteConfig.contactInfo = contactInfo;
+    if (socialMedia !== undefined) siteConfig.socialMedia = socialMedia;
+    if (seo !== undefined) siteConfig.seo = seo;
+    if (videoUrl !== undefined) siteConfig.videoUrl = videoUrl;
     
     siteConfig.lastUpdated = Date.now();
     await siteConfig.save();
@@ -162,6 +166,7 @@ exports.updateSiteConfig = async (req, res) => {
     
     res.status(200).json(siteConfig);
   } catch (error) {
+    console.error('Error updating site config:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -237,7 +242,7 @@ exports.getDashboardStats = async (req, res) => {
     // Get recent activities
     const recentActivities = await Activity.find()
       .sort({ timestamp: -1 })
-      .limit(5);
+      .limit(10);
     
     res.status(200).json({
       counts: {
@@ -250,6 +255,7 @@ exports.getDashboardStats = async (req, res) => {
       recentActivities
     });
   } catch (error) {
+    console.error('Error getting dashboard stats:', error);
     res.status(500).json({ message: error.message });
   }
 };

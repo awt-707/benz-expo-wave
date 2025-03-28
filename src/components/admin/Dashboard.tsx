@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Car, MessageSquare, Building } from 'lucide-react';
-import { API_BASE_URL } from '@/services/api';
+import { adminApi } from '@/services/api';
 
 // Import our components
 import StatsCard from './dashboard/StatsCard';
@@ -38,53 +38,14 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        // Cette API n'existe pas encore côté serveur, on devrait utiliser /api/admin/visitors pour le moment
-        const response = await fetch(`${API_BASE_URL}/admin/visitors`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        // Utiliser l'API structurée pour récupérer les statistiques
+        const dashboardStats = await adminApi.getDashboardStats().catch(() => null);
         
-        if (!response.ok) {
+        if (dashboardStats) {
+          setStats(dashboardStats);
+        } else {
           throw new Error('Erreur lors de la récupération des statistiques');
         }
-        
-        // Adapter la réponse au format attendu
-        const visitorData = await response.json();
-        
-        // Récupérer les données des véhicules et messages depuis d'autres endpoints
-        const vehiclesResponse = await fetch(`${API_BASE_URL}/vehicles`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        const messagesResponse = await fetch(`${API_BASE_URL}/admin/messages`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        const activitiesResponse = await fetch(`${API_BASE_URL}/admin/activities?limit=5`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (!vehiclesResponse.ok || !messagesResponse.ok || !activitiesResponse.ok) {
-          throw new Error('Erreur lors de la récupération des données');
-        }
-        
-        const vehicles = await vehiclesResponse.json();
-        const messages = await messagesResponse.json();
-        const activities = await activitiesResponse.json();
-        
-        // Construire l'objet stats à partir des différentes réponses
-        setStats({
-          counts: {
-            vehicles: vehicles.length || 0,
-            messages: messages.length || 0,
-            unreadMessages: messages.filter((m: any) => !m.read).length || 0,
-            visitorsToday: visitorData.visitorsLast24Hours || 0,
-            visitorsWeek: visitorData.visitorsLast7Days || 0
-          },
-          recentActivities: activities || []
-        });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
         

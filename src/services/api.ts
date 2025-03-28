@@ -1,3 +1,4 @@
+
 // API service for communicating with our backend
 
 // Base URL for API requests
@@ -10,6 +11,15 @@ const handleResponse = async (response: Response) => {
     throw new Error(errorData.message || `API error: ${response.status}`);
   }
   return response.json();
+};
+
+// Helper pour obtenir le token d'authentification
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('adminToken');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
 };
 
 // Admin API
@@ -39,13 +49,9 @@ export const adminApi = {
 
   // Update site config
   updateSiteConfig: async (config: any) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(config),
     });
     return handleResponse(response);
@@ -53,37 +59,49 @@ export const adminApi = {
   
   // Get dashboard stats
   getDashboardStats: async () => {
-    const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard-stats`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
   },
   
   // Get activity log
   getActivityLog: async () => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/admin/activity`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   },
   
   // Save custom page
   saveCustomPage: async (pageKey: string, pageData: any) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(pageData),
     });
+    return handleResponse(response);
+  },
+
+  // Upload video
+  uploadVideo: async (videoFile: File) => {
+    const token = localStorage.getItem('adminToken');
+    const formData = new FormData();
+    formData.append('video', videoFile);
+    
+    const response = await fetch(`${API_BASE_URL}/admin/upload-video`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    
     return handleResponse(response);
   }
 };
@@ -110,13 +128,9 @@ export const vehiclesApi = {
 
   // Create vehicle
   create: async (vehicleData: any) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/vehicles`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(vehicleData),
     });
     return handleResponse(response);
@@ -124,13 +138,9 @@ export const vehiclesApi = {
 
   // Update vehicle
   update: async (id: string, vehicleData: any) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(vehicleData),
     });
     return handleResponse(response);
@@ -138,12 +148,9 @@ export const vehiclesApi = {
 
   // Delete vehicle
   delete: async (id: string) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   },
