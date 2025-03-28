@@ -38,11 +38,8 @@ export const adminApi = {
 
   // Get site config
   getSiteConfig: async () => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   },
@@ -110,73 +107,108 @@ export const adminApi = {
 export const vehiclesApi = {
   // Get all vehicles
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles`);
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      throw error;
+    }
   },
 
   // Get featured vehicles
   getFeatured: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/featured`);
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles/featured`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching featured vehicles:', error);
+      throw error;
+    }
   },
 
   // Get single vehicle
   getById: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`);
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error fetching vehicle with ID ${id}:`, error);
+      throw error;
+    }
   },
 
   // Create vehicle
   create: async (vehicleData: any) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(vehicleData),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(vehicleData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error creating vehicle:', error);
+      throw error;
+    }
   },
 
   // Update vehicle
   update: async (id: string, vehicleData: any) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(vehicleData),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(vehicleData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error updating vehicle with ID ${id}:`, error);
+      throw error;
+    }
   },
 
   // Delete vehicle
   delete: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error deleting vehicle with ID ${id}:`, error);
+      throw error;
+    }
   },
 
   // Upload images
   uploadImages: async (id: string | null, images: File[]) => {
-    const token = localStorage.getItem('adminToken');
-    const formData = new FormData();
-    
-    images.forEach(image => {
-      formData.append('images', image);
-    });
-    
-    const endpoint = id 
-      ? `${API_BASE_URL}/vehicles/upload/${id}`
-      : `${API_BASE_URL}/vehicles/upload`;
+    try {
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
       
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    
-    return handleResponse(response);
+      images.forEach(image => {
+        formData.append('images', image);
+      });
+      
+      const endpoint = id 
+        ? `${API_BASE_URL}/vehicles/upload/${id}`
+        : `${API_BASE_URL}/vehicles/upload`;
+        
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error uploading vehicle images:', error);
+      throw error;
+    }
   }
 };
 
@@ -184,24 +216,26 @@ export const vehiclesApi = {
 export const contactApi = {
   // Submit contact form
   submit: async (contactData: any) => {
-    const response = await fetch(`${API_BASE_URL}/contact`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(contactData),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      throw error;
+    }
   },
 
   // Get all messages (admin)
   getMessages: async () => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/contact`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
       return handleResponse(response);
     } catch (error) {
@@ -212,20 +246,30 @@ export const contactApi = {
 
   // Mark message as responded
   markResponded: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/contact/${id}/respond`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact/${id}/respond`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error marking message ${id} as responded:`, error);
+      throw error;
+    }
   },
 
   // Delete message (admin)
   deleteMessage: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error deleting message ${id}:`, error);
+      throw error;
+    }
   }
 };
 
@@ -234,11 +278,8 @@ export const mediaApi = {
   // Get all media
   getAll: async () => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/media`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
       return handleResponse(response);
     } catch (error) {
@@ -249,32 +290,39 @@ export const mediaApi = {
   
   // Upload media
   upload: async (file: File) => {
-    const token = localStorage.getItem('adminToken');
-    const formData = new FormData();
-    formData.append('media', file);
-    
-    const response = await fetch(`${API_BASE_URL}/media/upload`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-    
-    return handleResponse(response);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('media', file);
+      
+      const response = await fetch(`${API_BASE_URL}/media/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error uploading media:', error);
+      throw error;
+    }
   },
   
   // Delete media
   delete: async (filename: string) => {
-    const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/media/${filename}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/media/${filename}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error deleting media ${filename}:`, error);
+      throw error;
+    }
   }
 };
 
@@ -299,11 +347,8 @@ export const visitorApi = {
   // Get visitor stats (admin)
   getStats: async () => {
     try {
-      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/visitors/stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: getAuthHeaders(),
       });
       return handleResponse(response);
     } catch (error) {
@@ -317,7 +362,12 @@ export const visitorApi = {
 export const configApi = {
   // Get site configuration
   getConfig: async () => {
-    const response = await fetch(`${API_BASE_URL}/site-config`);
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/site-config`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching site configuration:', error);
+      throw error;
+    }
   }
 };

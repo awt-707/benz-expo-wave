@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Pencil, Trash, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash, Eye, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { API_BASE_URL } from '@/services/api';
+import { vehiclesApi } from '@/services/api';
 
 interface Vehicle {
   _id: string;
@@ -24,28 +24,32 @@ interface Vehicle {
 const VehiclesList = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/vehicles`);
-        const data = await response.json();
-        setVehicles(data);
-      } catch (error) {
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les véhicules",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchVehicles = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await vehiclesApi.getAll();
+      setVehicles(data);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      setError('Impossible de récupérer les véhicules. Veuillez réessayer plus tard.');
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer les véhicules",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchVehicles();
-  }, [toast]);
+  }, []);
 
   const handleDeleteVehicle = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce véhicule ?")) {
@@ -53,23 +57,12 @@ const VehiclesList = () => {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await vehiclesApi.delete(id);
+      setVehicles(vehicles.filter(vehicle => vehicle._id !== id));
+      toast({
+        title: "Suppression réussie",
+        description: "Le véhicule a été supprimé avec succès",
       });
-
-      if (response.ok) {
-        setVehicles(vehicles.filter(vehicle => vehicle._id !== id));
-        toast({
-          title: "Suppression réussie",
-          description: "Le véhicule a été supprimé avec succès",
-        });
-      } else {
-        throw new Error("Erreur lors de la suppression");
-      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -87,13 +80,23 @@ const VehiclesList = () => {
     navigate(`/admin/vehicles/edit/${id}`);
   };
 
+  const handleRefresh = () => {
+    fetchVehicles();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Véhicules</h1>
-        <Button onClick={handleAddVehicle}>
-          <Plus className="mr-2 h-4 w-4" /> Ajouter un véhicule
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualiser
+          </Button>
+          <Button onClick={handleAddVehicle}>
+            <Plus className="mr-2 h-4 w-4" /> Ajouter un véhicule
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="all">
@@ -108,8 +111,10 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles} 
             isLoading={isLoading} 
+            error={error}
             onDelete={handleDeleteVehicle}
             onEdit={handleEditVehicle}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
         
@@ -117,8 +122,10 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'available')} 
             isLoading={isLoading} 
+            error={error}
             onDelete={handleDeleteVehicle}
             onEdit={handleEditVehicle}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
         
@@ -126,8 +133,10 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'sold')} 
             isLoading={isLoading} 
+            error={error}
             onDelete={handleDeleteVehicle}
             onEdit={handleEditVehicle}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
         
@@ -135,8 +144,10 @@ const VehiclesList = () => {
           <VehicleTable 
             vehicles={vehicles.filter(v => v.status === 'reserved')} 
             isLoading={isLoading} 
+            error={error}
             onDelete={handleDeleteVehicle}
             onEdit={handleEditVehicle}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
       </Tabs>
@@ -147,17 +158,52 @@ const VehiclesList = () => {
 interface VehicleTableProps {
   vehicles: Vehicle[];
   isLoading: boolean;
+  error: string | null;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
+  onRefresh: () => void;
 }
 
-const VehicleTable: React.FC<VehicleTableProps> = ({ vehicles, isLoading, onDelete, onEdit }) => {
+const VehicleTable: React.FC<VehicleTableProps> = ({ 
+  vehicles, 
+  isLoading, 
+  error,
+  onDelete, 
+  onEdit,
+  onRefresh
+}) => {
   if (isLoading) {
-    return <div className="text-center py-4">Chargement...</div>;
+    return (
+      <div className="text-center py-12 border rounded-md mt-4">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
+        <p>Chargement des véhicules...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-red-500 border rounded-md mt-4">
+        <p className="mb-4">{error}</p>
+        <Button onClick={onRefresh}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Réessayer
+        </Button>
+      </div>
+    );
   }
 
   if (vehicles.length === 0) {
-    return <div className="text-center py-4">Aucun véhicule trouvé</div>;
+    return (
+      <div className="text-center py-12 text-gray-500 border rounded-md mt-4">
+        <p className="text-lg font-medium">Aucun véhicule trouvé</p>
+        <p className="text-sm mb-4">Ajoutez des véhicules pour qu'ils apparaissent ici.</p>
+        <Button onClick={onRefresh}>
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Actualiser
+        </Button>
+      </div>
+    );
   }
 
   return (

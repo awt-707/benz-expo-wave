@@ -15,7 +15,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -41,11 +42,20 @@ app.get('/', (req, res) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/media', express.static(path.join(__dirname, 'uploads/media')));
 app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
+app.use('/vehicles', express.static(path.join(__dirname, 'uploads/vehicles')));
+
+// 404 handler
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'Ressource not found' });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
+  res.status(500).json({ 
+    message: 'Internal server error', 
+    error: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message 
+  });
 });
 
 // Start server

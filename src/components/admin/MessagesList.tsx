@@ -7,7 +7,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Eye, MessageSquare, Trash, XCircle } from 'lucide-react';
+import { Eye, MessageSquare, Trash, XCircle, RefreshCw } from 'lucide-react';
 import { contactApi } from '@/services/api';
 
 interface Message {
@@ -23,30 +23,33 @@ interface Message {
 const MessagesList = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        setIsLoading(true);
-        const data = await contactApi.getMessages();
-        setMessages(data);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les messages",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchMessages = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await contactApi.getMessages();
+      setMessages(data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      setError('Impossible de récupérer les messages. Veuillez réessayer plus tard.');
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer les messages",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMessages();
-  }, [toast]);
+  }, []);
 
   const handleViewMessage = (message: Message) => {
     setSelectedMessage(message);
@@ -65,8 +68,17 @@ const MessagesList = () => {
       setMessages(messages.map(msg => 
         msg._id === id ? { ...msg, responded: true } : msg
       ));
+      toast({
+        title: "Succès",
+        description: "Message marqué comme lu",
+      });
     } catch (error) {
       console.error('Error marking message as responded:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de marquer le message comme lu",
+        variant: "destructive",
+      });
     }
   };
 
@@ -95,11 +107,19 @@ const MessagesList = () => {
     }
   };
 
+  const handleRefresh = () => {
+    fetchMessages();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Messages</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualiser
+          </Button>
           <Button variant="outline">
             <MessageSquare className="mr-2 h-4 w-4" />
             {messages.filter(m => !m.responded).length} non lus
@@ -113,9 +133,24 @@ const MessagesList = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-4">Chargement...</div>
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
+              <p>Chargement des messages...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">
+              <p className="mb-4">{error}</p>
+              <Button onClick={handleRefresh}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Réessayer
+              </Button>
+            </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-4">Aucun message</div>
+            <div className="text-center py-12 text-gray-500">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">Aucun message</p>
+              <p className="text-sm">Vous n'avez pas encore reçu de messages via le formulaire de contact.</p>
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -141,7 +176,7 @@ const MessagesList = () => {
                     </TableCell>
                     <TableCell>{message.name}</TableCell>
                     <TableCell>{message.email}</TableCell>
-                    <TableCell>{message.phone}</TableCell>
+                    <TableCell>{message.phone || '-'}</TableCell>
                     <TableCell>
                       {format(new Date(message.createdAt), 'dd MMM yyyy HH:mm', { locale: fr })}
                     </TableCell>
@@ -185,7 +220,7 @@ const MessagesList = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Téléphone</p>
-                <p>{selectedMessage?.phone}</p>
+                <p>{selectedMessage?.phone || '-'}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm font-medium text-muted-foreground">Date</p>
