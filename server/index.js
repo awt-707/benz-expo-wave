@@ -19,11 +19,12 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
+console.log('Connecting to MongoDB...');
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
+.then(() => console.log('Connected to MongoDB successfully'))
 .catch(err => console.error('Could not connect to MongoDB', err));
 
 // Routes
@@ -44,8 +45,29 @@ app.use('/media', express.static(path.join(__dirname, 'uploads/media')));
 app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
 app.use('/vehicles', express.static(path.join(__dirname, 'uploads/vehicles')));
 
+// Debug route to check uploaded files
+app.get('/api/check-uploads', (req, res) => {
+  const vehiclesDir = path.join(__dirname, 'uploads/vehicles');
+  
+  if (!fs.existsSync(vehiclesDir)) {
+    return res.json({ exists: false, message: 'Vehicles directory does not exist' });
+  }
+  
+  try {
+    const files = fs.readdirSync(vehiclesDir);
+    res.json({ 
+      exists: true, 
+      fileCount: files.length,
+      files: files.slice(0, 20) // Return first 20 files to avoid overwhelming response
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 404 handler
 app.use((req, res, next) => {
+  console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ message: 'Ressource not found' });
 });
 

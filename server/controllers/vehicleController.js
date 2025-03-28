@@ -40,9 +40,12 @@ const upload = multer({
 // Get all vehicles
 exports.getVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find();
+    console.log('Fetching all vehicles');
+    const vehicles = await Vehicle.find().sort({ createdAt: -1 });
+    console.log(`Found ${vehicles.length} vehicles`);
     res.status(200).json(vehicles);
   } catch (error) {
+    console.error('Error in getVehicles:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -50,12 +53,15 @@ exports.getVehicles = async (req, res) => {
 // Get a single vehicle
 exports.getVehicle = async (req, res) => {
   try {
+    console.log(`Fetching vehicle with ID: ${req.params.id}`);
     const vehicle = await Vehicle.findById(req.params.id);
     if (!vehicle) {
+      console.log(`Vehicle not found with ID: ${req.params.id}`);
       return res.status(404).json({ message: 'Vehicle not found' });
     }
     res.status(200).json(vehicle);
   } catch (error) {
+    console.error('Error in getVehicle:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -63,10 +69,19 @@ exports.getVehicle = async (req, res) => {
 // Create a new vehicle
 exports.createVehicle = async (req, res) => {
   try {
+    console.log('Creating new vehicle:', req.body);
     const vehicle = new Vehicle(req.body);
+    
+    // If status is not provided, set to 'available' by default
+    if (!vehicle.status) {
+      vehicle.status = 'available';
+    }
+    
     await vehicle.save();
+    console.log('Vehicle created successfully:', vehicle._id);
     res.status(201).json(vehicle);
   } catch (error) {
+    console.error('Error in createVehicle:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -74,12 +89,16 @@ exports.createVehicle = async (req, res) => {
 // Update a vehicle
 exports.updateVehicle = async (req, res) => {
   try {
+    console.log(`Updating vehicle with ID: ${req.params.id}`);
     const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!vehicle) {
+      console.log(`Vehicle not found with ID: ${req.params.id}`);
       return res.status(404).json({ message: 'Vehicle not found' });
     }
+    console.log('Vehicle updated successfully');
     res.status(200).json(vehicle);
   } catch (error) {
+    console.error('Error in updateVehicle:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -87,21 +106,27 @@ exports.updateVehicle = async (req, res) => {
 // Delete a vehicle
 exports.deleteVehicle = async (req, res) => {
   try {
+    console.log(`Deleting vehicle with ID: ${req.params.id}`);
     const vehicle = await Vehicle.findByIdAndDelete(req.params.id);
     if (!vehicle) {
+      console.log(`Vehicle not found with ID: ${req.params.id}`);
       return res.status(404).json({ message: 'Vehicle not found' });
     }
     
     // Delete associated images
+    let deletedImages = 0;
     vehicle.images.forEach(img => {
       const imagePath = path.join(__dirname, '../uploads/vehicles', path.basename(img));
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
+        deletedImages++;
       }
     });
     
+    console.log(`Vehicle deleted successfully. Removed ${deletedImages} associated images.`);
     res.status(200).json({ message: 'Vehicle deleted successfully' });
   } catch (error) {
+    console.error('Error in deleteVehicle:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -112,27 +137,34 @@ exports.uploadImages = (req, res) => {
 
   uploadMultiple(req, res, async (err) => {
     if (err) {
+      console.error('Error in uploadImages:', err);
       return res.status(400).json({ message: err });
     }
 
     try {
+      console.log(`Uploaded ${req.files.length} images`);
       const fileUrls = req.files.map(file => `/vehicles/${file.filename}`);
       
       if (req.params.id) {
         // Update existing vehicle with new images
+        console.log(`Adding images to vehicle with ID: ${req.params.id}`);
         const vehicle = await Vehicle.findById(req.params.id);
         if (!vehicle) {
+          console.log(`Vehicle not found with ID: ${req.params.id}`);
           return res.status(404).json({ message: 'Vehicle not found' });
         }
         
         vehicle.images = [...vehicle.images, ...fileUrls];
         await vehicle.save();
+        console.log('Images added to vehicle successfully');
         return res.status(200).json(vehicle);
       }
       
       // Just return the URLs if no vehicle ID provided
+      console.log('Returning image URLs only');
       res.status(200).json(fileUrls);
     } catch (error) {
+      console.error('Error processing uploaded images:', error);
       res.status(500).json({ message: error.message });
     }
   });
@@ -141,9 +173,12 @@ exports.uploadImages = (req, res) => {
 // Get featured vehicles
 exports.getFeaturedVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find({ featured: true });
+    console.log('Fetching featured vehicles');
+    const vehicles = await Vehicle.find({ featured: true }).sort({ createdAt: -1 });
+    console.log(`Found ${vehicles.length} featured vehicles`);
     res.status(200).json(vehicles);
   } catch (error) {
+    console.error('Error in getFeaturedVehicles:', error);
     res.status(500).json({ message: error.message });
   }
 };

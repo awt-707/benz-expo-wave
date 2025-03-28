@@ -1,4 +1,3 @@
-
 // API service for communicating with our backend
 
 // Base URL for API requests
@@ -108,8 +107,14 @@ export const vehiclesApi = {
   // Get all vehicles
   getAll: async () => {
     try {
+      console.log('Fetching all vehicles...');
       const response = await fetch(`${API_BASE_URL}/vehicles`);
-      return handleResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch vehicles: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('Fetched vehicles:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
@@ -141,12 +146,16 @@ export const vehiclesApi = {
   // Create vehicle
   create: async (vehicleData: any) => {
     try {
+      console.log('Creating vehicle:', vehicleData);
       const response = await fetch(`${API_BASE_URL}/vehicles`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(vehicleData),
       });
-      return handleResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to create vehicle: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error('Error creating vehicle:', error);
       throw error;
@@ -156,12 +165,16 @@ export const vehiclesApi = {
   // Update vehicle
   update: async (id: string, vehicleData: any) => {
     try {
+      console.log('Updating vehicle:', id, vehicleData);
       const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(vehicleData),
       });
-      return handleResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to update vehicle: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error(`Error updating vehicle with ID ${id}:`, error);
       throw error;
@@ -171,11 +184,15 @@ export const vehiclesApi = {
   // Delete vehicle
   delete: async (id: string) => {
     try {
+      console.log('Deleting vehicle:', id);
       const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      return handleResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to delete vehicle: ${response.status} ${response.statusText}`);
+      }
+      return await response.json();
     } catch (error) {
       console.error(`Error deleting vehicle with ID ${id}:`, error);
       throw error;

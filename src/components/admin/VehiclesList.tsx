@@ -33,6 +33,7 @@ const VehiclesList = () => {
       setIsLoading(true);
       setError(null);
       const data = await vehiclesApi.getAll();
+      console.log('Fetched vehicles:', data);
       setVehicles(data);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -64,6 +65,7 @@ const VehiclesList = () => {
         description: "Le véhicule a été supprimé avec succès",
       });
     } catch (error) {
+      console.error('Error deleting vehicle:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le véhicule",
