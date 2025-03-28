@@ -16,6 +16,7 @@ interface StatsCardProps {
 const StatsCard = ({ title, value, icon, trend }: StatsCardProps) => {
   // Fonction pour formater les valeurs avec pluralisation
   const formatValue = (val: number): string => {
+    if (isNaN(val) || val === undefined) return '0';
     if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
     if (val >= 1000) return `${(val / 1000).toFixed(1)}k`;
     return val.toLocaleString('fr-FR');

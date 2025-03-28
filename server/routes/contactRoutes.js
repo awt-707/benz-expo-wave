@@ -7,7 +7,7 @@ const { verifyToken } = require('../middleware/auth');
 // Public routes
 router.post('/', contactController.submitContact);
 
-// Protected routes (admin only)
+// Admin routes (protected)
 router.get('/', verifyToken, contactController.getContacts);
 router.get('/:id', verifyToken, contactController.getContact);
 router.put('/:id/respond', verifyToken, contactController.markResponded);

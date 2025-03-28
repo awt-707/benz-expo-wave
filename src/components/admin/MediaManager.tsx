@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Trash, Image } from 'lucide-react';
-import { API_BASE_URL } from '@/services/api';
+import { API_BASE_URL, mediaApi } from '@/services/api';
 
 interface MediaFile {
   filename: string;
@@ -22,20 +22,11 @@ const MediaManager = () => {
 
   const fetchMedia = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/media`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des médias');
-      }
-      
-      const data = await response.json();
+      setIsLoading(true);
+      const data = await mediaApi.getAll();
       setMediaFiles(data);
     } catch (error) {
+      console.error('Error fetching media:', error);
       toast({
         title: "Erreur",
         description: "Impossible de récupérer les médias",
@@ -54,27 +45,10 @@ const MediaManager = () => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('media', file);
-    
     setUploadLoading(true);
     
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/media/upload`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors du téléchargement');
-      }
-      
-      const data = await response.json();
-      
+      await mediaApi.upload(file);
       toast({
         title: "Succès",
         description: "Média téléchargé avec succès",
@@ -83,6 +57,7 @@ const MediaManager = () => {
       // Rafraîchir la liste des médias
       fetchMedia();
     } catch (error) {
+      console.error('Error uploading media:', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le fichier",
@@ -99,18 +74,7 @@ const MediaManager = () => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce média ?')) return;
     
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/media/${filename}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression');
-      }
-      
+      await mediaApi.delete(filename);
       toast({
         title: "Succès",
         description: "Média supprimé avec succès",
@@ -119,6 +83,7 @@ const MediaManager = () => {
       // Mettre à jour la liste
       setMediaFiles(prev => prev.filter(file => file.filename !== filename));
     } catch (error) {
+      console.error('Error deleting media:', error);
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le fichier",

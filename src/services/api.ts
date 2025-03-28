@@ -196,35 +196,34 @@ export const contactApi = {
 
   // Get all messages (admin)
   getMessages: async () => {
-    const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/contact`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return handleResponse(response);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      throw error;
+    }
   },
 
   // Mark message as responded
   markResponded: async (id: string) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/contact/${id}/respond`, {
       method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   },
 
   // Delete message (admin)
   deleteMessage: async (id: string) => {
-    const token = localStorage.getItem('adminToken');
     const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   }
@@ -234,13 +233,18 @@ export const contactApi = {
 export const mediaApi = {
   // Get all media
   getAll: async () => {
-    const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/media`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return handleResponse(response);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/media`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching media:', error);
+      throw error;
+    }
   },
   
   // Upload media
@@ -294,13 +298,18 @@ export const visitorApi = {
 
   // Get visitor stats (admin)
   getStats: async () => {
-    const token = localStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/visitors/stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return handleResponse(response);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/visitors/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching visitor stats:', error);
+      throw error;
+    }
   }
 };
 

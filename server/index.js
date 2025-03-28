@@ -16,7 +16,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('uploads'));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -40,6 +39,14 @@ app.get('/', (req, res) => {
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/media', express.static(path.join(__dirname, 'uploads/media')));
+app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ message: 'Internal server error', error: err.message });
+});
 
 // Start server
 const PORT = process.env.PORT || 5001;

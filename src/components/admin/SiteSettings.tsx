@@ -7,7 +7,7 @@ import { ContactSettings } from './settings/ContactSettings';
 import { VideoSettings } from './settings/VideoSettings';
 import { SEOSettings } from './settings/SEOSettings';
 import { PagesSettings } from './settings/PagesSettings';
-import { API_BASE_URL } from '@/services/api';
+import { adminApi } from '@/services/api';
 import { SiteConfigType } from './settings/settingsUtils';
 
 const defaultConfig: SiteConfigType = {
@@ -40,18 +40,8 @@ const SiteSettings = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération de la configuration');
-        }
-        
-        const data = await response.json();
+        setIsLoading(true);
+        const data = await adminApi.getSiteConfig();
         
         // Ensure all required properties exist
         const completeConfig = {
@@ -76,6 +66,7 @@ const SiteSettings = () => {
         
         setConfig(completeConfig);
       } catch (error) {
+        console.error('Error fetching site config:', error);
         toast({
           title: "Erreur",
           description: "Impossible de récupérer la configuration du site",

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Eye, MessageSquare, Trash, XCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/services/api';
+import { contactApi } from '@/services/api';
 
 interface Message {
   _id: string;
@@ -17,7 +17,7 @@ interface Message {
   phone: string;
   message: string;
   createdAt: string;
-  isRead: boolean;
+  responded: boolean;
 }
 
 const MessagesList = () => {
@@ -30,20 +30,11 @@ const MessagesList = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/contact/messages`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des messages');
-        }
-        
-        const data = await response.json();
+        setIsLoading(true);
+        const data = await contactApi.getMessages();
         setMessages(data);
       } catch (error) {
+        console.error('Error fetching messages:', error);
         toast({
           title: "Erreur",
           description: "Impossible de récupérer les messages",
@@ -61,30 +52,21 @@ const MessagesList = () => {
     setSelectedMessage(message);
     setDrawerOpen(true);
     
-    // Mark as read if it's not already
-    if (!message.isRead) {
-      markAsRead(message._id);
+    // Mark as responded if it's not already
+    if (!message.responded) {
+      markAsResponded(message._id);
     }
   };
 
-  const markAsRead = async (id: string) => {
+  const markAsResponded = async (id: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}/read`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        // Update local state
-        setMessages(messages.map(msg => 
-          msg._id === id ? { ...msg, isRead: true } : msg
-        ));
-      }
+      await contactApi.markResponded(id);
+      // Update local state
+      setMessages(messages.map(msg => 
+        msg._id === id ? { ...msg, responded: true } : msg
+      ));
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      console.error('Error marking message as responded:', error);
     }
   };
 
@@ -94,27 +76,16 @@ const MessagesList = () => {
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setMessages(messages.filter(msg => msg._id !== id));
-        if (selectedMessage?._id === id) {
-          setSelectedMessage(null);
-          setDrawerOpen(false);
-        }
-        toast({
-          title: "Suppression réussie",
-          description: "Le message a été supprimé avec succès",
-        });
-      } else {
-        throw new Error("Erreur lors de la suppression");
+      await contactApi.deleteMessage(id);
+      setMessages(messages.filter(msg => msg._id !== id));
+      if (selectedMessage?._id === id) {
+        setSelectedMessage(null);
+        setDrawerOpen(false);
       }
+      toast({
+        title: "Suppression réussie",
+        description: "Le message a été supprimé avec succès",
+      });
     } catch (error) {
       toast({
         title: "Erreur",
@@ -131,7 +102,7 @@ const MessagesList = () => {
         <div className="flex items-center gap-2">
           <Button variant="outline">
             <MessageSquare className="mr-2 h-4 w-4" />
-            {messages.filter(m => !m.isRead).length} non lus
+            {messages.filter(m => !m.responded).length} non lus
           </Button>
         </div>
       </div>
@@ -161,10 +132,10 @@ const MessagesList = () => {
                 {messages.map((message) => (
                   <TableRow 
                     key={message._id}
-                    className={!message.isRead ? "bg-primary/5 font-medium" : ""}
+                    className={!message.responded ? "bg-primary/5 font-medium" : ""}
                   >
                     <TableCell>
-                      {!message.isRead && (
+                      {!message.responded && (
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
                       )}
                     </TableCell>

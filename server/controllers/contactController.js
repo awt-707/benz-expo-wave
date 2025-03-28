@@ -1,20 +1,28 @@
 
 const Contact = require('../models/Contact');
+const Activity = require('../models/Activity');
 const nodemailer = require('nodemailer');
 
-// Create transporter for sending emails
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Create transporter for sending emails only if environment variables are defined
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+}
 
 // Submit a contact form
 exports.submitContact = async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
+    
+    if (!name || !email || !message) {
+      return res.status(400).json({ message: 'Name, email and message are required' });
+    }
     
     // Create new contact
     const contact = new Contact({
@@ -26,27 +34,46 @@ exports.submitContact = async (req, res) => {
     
     await contact.save();
     
-    // Send email notification
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Send to yourself
-      subject: 'Nouveau message de contact - 3ansdz',
-      html: `
-        <h2>Nouveau message de contact</h2>
-        <p><strong>Nom:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Téléphone:</strong> ${phone || 'Non fourni'}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
-        <hr>
-        <p>Ce message a été envoyé depuis le formulaire de contact sur 3ansdz.com</p>
-      `
-    };
+    // Log activity
+    try {
+      await Activity.create({
+        type: 'message',
+        action: 'Nouveau message',
+        details: `De: ${name} (${email})`,
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
     
-    await transporter.sendMail(mailOptions);
+    // Send email notification if transporter is configured
+    if (transporter) {
+      try {
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: process.env.EMAIL_USER, // Send to yourself
+          subject: 'Nouveau message de contact - 3ansdz',
+          html: `
+            <h2>Nouveau message de contact</h2>
+            <p><strong>Nom:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Téléphone:</strong> ${phone || 'Non fourni'}</p>
+            <p><strong>Message:</strong></p>
+            <p>${message}</p>
+            <hr>
+            <p>Ce message a été envoyé depuis le formulaire de contact sur 3ansdz.com</p>
+          `
+        };
+        
+        await transporter.sendMail(mailOptions);
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError);
+        // Continue execution even if email fails
+      }
+    }
     
     res.status(201).json({ message: 'Message envoyé avec succès' });
   } catch (error) {
+    console.error('Error submitting contact form:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -57,7 +84,8 @@ exports.getContacts = async (req, res) => {
     const contacts = await Contact.find().sort({ createdAt: -1 });
     res.status(200).json(contacts);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error getting contacts:', error);
+    res.status(500).json({ message: 'Error retrieving contacts' });
   }
 };
 
@@ -70,7 +98,8 @@ exports.getContact = async (req, res) => {
     }
     res.status(200).json(contact);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error getting contact:', error);
+    res.status(500).json({ message: 'Error retrieving contact' });
   }
 };
 
@@ -87,9 +116,22 @@ exports.markResponded = async (req, res) => {
       return res.status(404).json({ message: 'Contact not found' });
     }
     
+    // Log activity
+    try {
+      await Activity.create({
+        type: 'message',
+        action: 'Message marqué comme répondu',
+        details: `Message de: ${contact.name}`,
+        user: req.user?.username || 'admin'
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+    
     res.status(200).json(contact);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error marking contact as responded:', error);
+    res.status(500).json({ message: 'Error updating contact' });
   }
 };
 
@@ -100,8 +142,22 @@ exports.deleteContact = async (req, res) => {
     if (!contact) {
       return res.status(404).json({ message: 'Contact not found' });
     }
+    
+    // Log activity
+    try {
+      await Activity.create({
+        type: 'message',
+        action: 'Message supprimé',
+        details: `Message de: ${contact.name}`,
+        user: req.user?.username || 'admin'
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+    
     res.status(200).json({ message: 'Contact deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting contact:', error);
+    res.status(500).json({ message: 'Error deleting contact' });
   }
 };

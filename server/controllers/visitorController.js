@@ -2,19 +2,26 @@
 const Visitor = require('../models/Visitor');
 const nodemailer = require('nodemailer');
 
-// Create transporter for sending emails
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Créer un transporter pour l'envoi d'emails uniquement si les variables d'environnement sont définies
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+}
 
 // Record a new visitor
 exports.recordVisit = async (req, res) => {
   try {
     const { page } = req.body;
+    
+    if (!page) {
+      return res.status(400).json({ message: 'Page is required' });
+    }
     
     const visitor = new Visitor({
       ip: req.ip,
@@ -24,24 +31,29 @@ exports.recordVisit = async (req, res) => {
     
     await visitor.save();
     
-    // Send email notification for important pages
-    if (page === '/contact' || page === '/vehicules' || page.startsWith('/vehicules/')) {
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_USER,
-        subject: `Nouvelle visite sur ${page} - 3ansdz`,
-        html: `
-          <h2>Nouvelle visite sur le site</h2>
-          <p><strong>Page:</strong> ${page}</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>IP:</strong> ${req.ip}</p>
-          <p><strong>User Agent:</strong> ${req.headers['user-agent']}</p>
-          <hr>
-          <p>Cette notification a été envoyée automatiquement depuis 3ansdz.com</p>
-        `
-      };
-      
-      await transporter.sendMail(mailOptions);
+    // Send email notification for important pages if transporter is configured
+    if (transporter && (page === '/contact' || page === '/vehicules' || page.startsWith('/vehicules/'))) {
+      try {
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: process.env.EMAIL_USER,
+          subject: `Nouvelle visite sur ${page} - 3ansdz`,
+          html: `
+            <h2>Nouvelle visite sur le site</h2>
+            <p><strong>Page:</strong> ${page}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>IP:</strong> ${req.ip}</p>
+            <p><strong>User Agent:</strong> ${req.headers['user-agent']}</p>
+            <hr>
+            <p>Cette notification a été envoyée automatiquement depuis 3ansdz.com</p>
+          `
+        };
+        
+        await transporter.sendMail(mailOptions);
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError);
+        // Continue execution even if email fails
+      }
     }
     
     res.status(201).json({ message: 'Visit recorded' });
@@ -86,6 +98,7 @@ exports.getVisitorStats = async (req, res) => {
       mostVisitedPages
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error getting visitor stats:', error);
+    res.status(500).json({ message: 'Error retrieving visitor statistics' });
   }
 };
