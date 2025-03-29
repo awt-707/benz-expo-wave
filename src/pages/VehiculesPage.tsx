@@ -9,132 +9,82 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { Filter, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { vehiclesApi } from "@/services/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const vehicles = [
-  {
-    id: "classe-c",
-    image: "/lovable-uploads/d6338b3f-2a4f-4279-90e4-8775cb7acd40.png",
-    title: "Mercedes-Benz Classe C",
-    description: "Élégance, confort et technologie de pointe. La Classe C incarne le luxe accessible.",
-    price: "45 000",
-    year: "2022",
-    specs: {
-      engine: "2.0L Turbo",
-      power: "204 ch",
-      acceleration: "7.3s",
-      consumption: "6.2L/100km"
-    },
-    availability: "En stock" as const,
-    fuelType: "Essence"
-  },
-  {
-    id: "classe-e",
-    image: "/lovable-uploads/3bf54152-1a0e-47d2-a44f-fae8843a5058.png",
-    title: "Mercedes-Benz Classe E",
-    description: "Sophistication et performances exceptionnelles pour cette berline de référence.",
-    price: "65 000",
-    year: "2023",
-    specs: {
-      engine: "3.0L V6",
-      power: "286 ch",
-      acceleration: "5.9s",
-      consumption: "7.4L/100km"
-    },
-    availability: "Sur commande" as const,
-    fuelType: "Hybride"
-  },
-  {
-    id: "classe-s",
-    image: "/lovable-uploads/964d32ef-a58e-44f7-a136-d1b93fdab210.png",
-    title: "Mercedes-Benz Classe S",
-    description: "L'expression ultime du luxe automobile, alliant confort incomparable et innovations technologiques.",
-    price: "110 000",
-    year: "2023",
-    specs: {
-      engine: "4.0L V8",
-      power: "435 ch",
-      acceleration: "4.8s",
-      consumption: "8.6L/100km"
-    },
-    availability: "Sur commande" as const,
-    fuelType: "Hybride"
-  },
-  {
-    id: "gle",
-    image: "/lovable-uploads/29df00a1-3840-4b5a-b171-484af6b189aa.png",
-    title: "Mercedes-Benz GLE",
-    description: "Un SUV alliant polyvalence, confort et performances pour toutes vos aventures.",
-    price: "78 000",
-    year: "2022",
-    specs: {
-      engine: "3.0L V6",
-      power: "330 ch",
-      acceleration: "5.7s",
-      consumption: "8.1L/100km"
-    },
-    availability: "En stock" as const,
-    fuelType: "Diesel"
-  },
-  {
-    id: "glc",
-    image: "/lovable-uploads/ea38bd58-5015-4016-a27f-9e96383424fb.png",
-    title: "Mercedes-Benz GLC",
-    description: "Le SUV compact qui offre un équilibre parfait entre élégance urbaine et capacités tout-terrain.",
-    price: "58 000",
-    year: "2023",
-    specs: {
-      engine: "2.0L Turbo",
-      power: "258 ch",
-      acceleration: "6.2s",
-      consumption: "7.1L/100km"
-    },
-    availability: "En stock" as const,
-    fuelType: "Essence"
-  },
-  {
-    id: "cla",
-    image: "/lovable-uploads/d6338b3f-2a4f-4279-90e4-8775cb7acd40.png",
-    title: "Mercedes-Benz CLA",
-    description: "Design coupé séduisant et performances dynamiques pour un plaisir de conduite unique.",
-    price: "42 000",
-    year: "2021",
-    specs: {
-      engine: "2.0L Turbo",
-      power: "224 ch",
-      acceleration: "6.3s",
-      consumption: "6.4L/100km"
-    },
-    availability: "Vendu" as const,
-    fuelType: "Électrique"
-  }
-];
+interface Vehicle {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  year: number;
+  make: string;
+  model: string;
+  images: string[];
+  status: 'available' | 'sold' | 'reserved';
+  specifications: {
+    engine: string;
+    transmission: string;
+    mileage: number;
+    fuelType: string;
+    bodyType: string;
+    color: string;
+  };
+}
 
-type FuelType = "Essence" | "Diesel" | "Hybride" | "Électrique";
+type FuelType = string;
 
 const VehiculesPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  
   useEffect(() => {
     window.scrollTo(0, 0);
+    fetchVehicles();
   }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await vehiclesApi.getAll();
+      console.log('Fetched vehicles from API:', data);
+      setVehicles(data);
+    } catch (error: any) {
+      console.error('Error fetching vehicles:', error);
+      setError(error.message || 'Erreur lors du chargement des véhicules');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<FuelType[]>([]);
-  const [yearRange, setYearRange] = useState([2021, 2023]);
+  const [yearRange, setYearRange] = useState([2021, 2025]);
+  
+  // Get unique fuel types from vehicles
+  const availableFuelTypes = Array.from(
+    new Set(vehicles.map(v => v.specifications?.fuelType).filter(Boolean))
+  );
   
   // Filter vehicles based on selected criteria
   const filteredVehicles = vehicles.filter(vehicle => {
     // Filter by fuel type if any is selected
-    const fuelTypeMatch = selectedFuelTypes.length === 0 || selectedFuelTypes.includes(vehicle.fuelType as FuelType);
+    const fuelTypeMatch = selectedFuelTypes.length === 0 || 
+      (vehicle.specifications?.fuelType && 
+       selectedFuelTypes.includes(vehicle.specifications.fuelType));
     
     // Filter by year range
-    const vehicleYear = parseInt(vehicle.year);
+    const vehicleYear = vehicle.year;
     const yearMatch = vehicleYear >= yearRange[0] && vehicleYear <= yearRange[1];
     
     return fuelTypeMatch && yearMatch;
   });
 
   // Count available vehicles after filtering
-  const availableCount = filteredVehicles.filter(v => v.availability === "En stock").length;
+  const availableCount = filteredVehicles.filter(v => v.status === 'available').length;
 
   const toggleFuelType = (fuelType: FuelType) => {
     setSelectedFuelTypes(prev => 
@@ -142,6 +92,39 @@ const VehiculesPage = () => {
         ? prev.filter(type => type !== fuelType)
         : [...prev, fuelType]
     );
+  };
+
+  // Calculate min and max years from available vehicles
+  const yearsArray = vehicles.map(v => v.year).filter(Boolean);
+  const minYear = yearsArray.length ? Math.min(...yearsArray) : 2021;
+  const maxYear = yearsArray.length ? Math.max(...yearsArray) : 2025;
+
+  // Set year range when vehicles load
+  useEffect(() => {
+    if (vehicles.length && yearsArray.length) {
+      setYearRange([minYear, maxYear]);
+    }
+  }, [vehicles]);
+
+  // Map status to display text
+  const getAvailabilityText = (status: string) => {
+    switch (status) {
+      case 'available':
+        return 'En stock';
+      case 'sold':
+        return 'Vendu';
+      case 'reserved':
+        return 'Sur commande';
+      default:
+        return status;
+    }
+  };
+
+  // Helper to get API URL for images
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '/placeholder.svg';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${imagePath}`;
   };
 
   return (
@@ -156,7 +139,7 @@ const VehiculesPage = () => {
                 Nos Véhicules
               </h1>
               <p className="text-white/90 max-w-3xl mx-auto text-center text-lg md:text-xl">
-                Découvrez notre sélection de véhicules Mercedes-Benz disponibles pour l'exportation vers l'Algérie. 
+                Découvrez notre sélection de véhicules disponibles pour l'exportation vers l'Algérie. 
                 <span className="font-bold text-mercedes-blue ml-2">{availableCount} véhicules actuellement en stock.</span>
               </p>
             </ScrollReveal>
@@ -184,98 +167,125 @@ const VehiculesPage = () => {
               </div>
             </div>
             
-            <Collapsible 
-              open={filtersOpen} 
-              onOpenChange={setFiltersOpen}
-              className="mb-8 border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-mercedes-darkblue" />
-                  <h3 className="text-lg font-medium">Filtres</h3>
-                </div>
-                <CollapsibleTrigger className="rounded-full hover:bg-gray-100 p-2 transition-colors">
-                  {filtersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </CollapsibleTrigger>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
+                <p>Chargement des véhicules...</p>
               </div>
-              
-              <CollapsibleContent className="mt-4 space-y-6">
-                <div>
-                  <h4 className="font-medium mb-3">Type de carburant</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {["Essence", "Diesel", "Hybride", "Électrique"].map((fuel) => (
-                      <div key={fuel} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`fuel-${fuel}`} 
-                          checked={selectedFuelTypes.includes(fuel as FuelType)}
-                          onCheckedChange={() => toggleFuelType(fuel as FuelType)}
-                          className="data-[state=checked]:bg-mercedes-darkblue"
-                        />
-                        <label 
-                          htmlFor={`fuel-${fuel}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {fuel}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-3">Année du véhicule</h4>
-                  <div className="px-2">
-                    <Slider 
-                      defaultValue={[2021, 2023]} 
-                      min={2021} 
-                      max={2023} 
-                      step={1} 
-                      value={yearRange}
-                      onValueChange={(value) => setYearRange(value as [number, number])}
-                      className="mb-6"
-                    />
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>{yearRange[0]}</span>
-                      <span>{yearRange[1]}</span>
+            ) : error ? (
+              <Alert variant="destructive" className="mb-8">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erreur</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <Collapsible 
+                  open={filtersOpen} 
+                  onOpenChange={setFiltersOpen}
+                  className="mb-8 border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-5 w-5 text-mercedes-darkblue" />
+                      <h3 className="text-lg font-medium">Filtres</h3>
                     </div>
+                    <CollapsibleTrigger className="rounded-full hover:bg-gray-100 p-2 transition-colors">
+                      {filtersOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                    </CollapsibleTrigger>
                   </div>
+                  
+                  <CollapsibleContent className="mt-4 space-y-6">
+                    {availableFuelTypes.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3">Type de carburant</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {availableFuelTypes.map((fuel) => (
+                            <div key={fuel} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`fuel-${fuel}`} 
+                                checked={selectedFuelTypes.includes(fuel)}
+                                onCheckedChange={() => toggleFuelType(fuel)}
+                                className="data-[state=checked]:bg-mercedes-darkblue"
+                              />
+                              <label 
+                                htmlFor={`fuel-${fuel}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {fuel}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h4 className="font-medium mb-3">Année du véhicule</h4>
+                      <div className="px-2">
+                        <Slider 
+                          value={yearRange}
+                          min={minYear} 
+                          max={maxYear} 
+                          step={1} 
+                          onValueChange={(value) => setYearRange(value as [number, number])}
+                          className="mb-6"
+                        />
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>{yearRange[0]}</span>
+                          <span>{yearRange[1]}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                <Separator className="mb-8" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredVehicles.length > 0 ? (
+                    filteredVehicles.map((vehicle, index) => (
+                      <ScrollReveal key={vehicle._id} delay={index * 100}>
+                        <VehicleCard
+                          id={vehicle._id}
+                          image={getImageUrl(vehicle.images[0])}
+                          title={`${vehicle.make} ${vehicle.model}`}
+                          description={vehicle.description}
+                          price={vehicle.price.toString()}
+                          year={vehicle.year.toString()}
+                          specs={{
+                            engine: vehicle.specifications?.engine || '',
+                            power: '',
+                            acceleration: '',
+                            consumption: ''
+                          }}
+                          availability={getAvailabilityText(vehicle.status) as any}
+                        />
+                      </ScrollReveal>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-12 text-center">
+                      <p className="text-lg text-gray-500">
+                        {vehicles.length > 0 
+                          ? 'Aucun véhicule ne correspond à vos critères de recherche.'
+                          : 'Aucun véhicule disponible pour le moment.'}
+                      </p>
+                      {vehicles.length > 0 && (
+                        <button 
+                          onClick={() => {
+                            setSelectedFuelTypes([]);
+                            setYearRange([minYear, maxYear]);
+                          }}
+                          className="mt-4 text-mercedes-blue hover:text-mercedes-darkblue underline"
+                        >
+                          Réinitialiser les filtres
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </CollapsibleContent>
-            </Collapsible>
-            
-            <Separator className="mb-8" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredVehicles.length > 0 ? (
-                filteredVehicles.map((vehicle, index) => (
-                  <ScrollReveal key={vehicle.id} delay={index * 100}>
-                    <VehicleCard
-                      id={vehicle.id}
-                      image={vehicle.image}
-                      title={vehicle.title}
-                      description={vehicle.description}
-                      price={vehicle.price}
-                      year={vehicle.year}
-                      specs={vehicle.specs}
-                      availability={vehicle.availability}
-                    />
-                  </ScrollReveal>
-                ))
-              ) : (
-                <div className="col-span-full py-12 text-center">
-                  <p className="text-lg text-gray-500">Aucun véhicule ne correspond à vos critères de recherche.</p>
-                  <button 
-                    onClick={() => {
-                      setSelectedFuelTypes([]);
-                      setYearRange([2021, 2023]);
-                    }}
-                    className="mt-4 text-mercedes-blue hover:text-mercedes-darkblue underline"
-                  >
-                    Réinitialiser les filtres
-                  </button>
-                </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </section>
         

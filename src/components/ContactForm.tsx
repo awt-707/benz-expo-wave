@@ -6,14 +6,15 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Car } from 'lucide-react';
+import { contactApi } from '@/services/api';
 
 const ContactForm = () => {
   const { toast } = useToast();
   const location = useLocation();
   const [formData, setFormData] = useState({
-    nom: '',
+    name: '',
     email: '',
-    telephone: '',
+    phone: '',
     message: '',
     vehiculeId: '',
     vehiculeTitre: ''
@@ -43,29 +44,50 @@ const ContactForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    setTimeout(() => {
-      console.log('Form submitted:', formData);
+    try {
+      // Convert form data to the expected API format
+      const contactData = {
+        name: formData.nom,
+        email: formData.email,
+        phone: formData.telephone,
+        message: formData.message,
+      };
+      
+      console.log('Submitting contact form:', contactData);
+      const response = await contactApi.submit(contactData);
+      
+      if (response.error) {
+        throw new Error(response.message || 'Error submitting form');
+      }
+      
       toast({
         title: "Message envoyé!",
         description: "Nous vous contacterons dans les plus brefs délais.",
       });
       
+      // Reset form
       setFormData({
-        nom: '',
+        name: '',
         email: '',
-        telephone: '',
+        phone: '',
         message: '',
         vehiculeId: '',
         vehiculeTitre: ''
       });
-      
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'envoi de votre message. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (

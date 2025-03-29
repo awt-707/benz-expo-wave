@@ -1,9 +1,16 @@
 
 import { API_BASE_URL, handleResponse, getAuthHeaders, handleApiError } from './apiUtils';
 
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+}
+
 export const contactApi = {
   // Submit contact form
-  submit: async (contactData: any) => {
+  submit: async (contactData: ContactFormData) => {
     try {
       console.log('Submitting contact form:', contactData);
       const response = await fetch(`${API_BASE_URL}/contact`, {
