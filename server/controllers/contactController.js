@@ -2,6 +2,8 @@
 const Contact = require('../models/Contact');
 const Activity = require('../models/Activity');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 // Create transporter for sending emails only if environment variables are defined
 let transporter = null;
@@ -65,6 +67,7 @@ exports.submitContact = async (req, res) => {
         };
         
         await transporter.sendMail(mailOptions);
+        console.log('Email notification sent successfully');
       } catch (emailError) {
         console.error('Error sending email notification:', emailError);
         // Continue execution even if email fails
@@ -74,13 +77,14 @@ exports.submitContact = async (req, res) => {
     res.status(201).json({ message: 'Message envoyé avec succès' });
   } catch (error) {
     console.error('Error submitting contact form:', error);
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message || 'Error submitting contact form' });
   }
 };
 
 // Get all contacts
 exports.getContacts = async (req, res) => {
   try {
+    console.log('Getting all contacts, user:', req.user?.username);
     const contacts = await Contact.find().sort({ createdAt: -1 });
     res.status(200).json(contacts);
   } catch (error) {

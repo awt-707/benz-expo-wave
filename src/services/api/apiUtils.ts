@@ -1,6 +1,6 @@
 
 // Base URL for API requests
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+export const API_BASE_URL = 'http://localhost:5001/api';
 
 // Helper function to handle API responses
 export const handleResponse = async (response: Response) => {
@@ -33,10 +33,12 @@ export const getAuthHeaders = () => {
   
   if (!token) {
     console.warn('No authentication token found');
-  } else {
-    console.log('Using authentication token');
+    return {
+      'Content-Type': 'application/json'
+    };
   }
   
+  console.log('Using authentication token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -54,4 +56,37 @@ export const handleApiError = (error: any) => {
   console.error('API error:', error);
   const message = error.message || 'Une erreur est survenue lors de la communication avec le serveur';
   return { error: true, message };
+};
+
+// Helper to refresh token if needed
+export const refreshAdminToken = async () => {
+  const token = localStorage.getItem('adminToken');
+  if (!token) return false;
+  
+  try {
+    // Call a refresh endpoint - this would need to be implemented on the server
+    const response = await fetch(`${API_BASE_URL}/admin/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      localStorage.removeItem('adminToken');
+      return false;
+    }
+    
+    const data = await response.json();
+    if (data.token) {
+      localStorage.setItem('adminToken', data.token);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return false;
+  }
 };

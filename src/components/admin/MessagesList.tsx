@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Eye, MessageSquare, Trash, XCircle, RefreshCw } from 'lucide-react';
+import { Eye, MessageSquare, Trash, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { contactApi } from '@/services/api';
 
 interface Message {
@@ -32,16 +33,50 @@ const MessagesList = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await contactApi.getMessages();
-      setMessages(data);
-    } catch (error) {
+      
+      // Vérifier si token existe, sinon rediriger vers login
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        setError('Vous devez être connecté pour accéder aux messages.');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Fetching messages...');
+      const response = await contactApi.getMessages();
+      
+      // Vérifier si response est un array (succès) ou contient une erreur
+      if (response.error) {
+        throw new Error(response.message);
+      }
+      
+      console.log('Messages fetched successfully:', response);
+      setMessages(Array.isArray(response) ? response : []);
+    } catch (error: any) {
       console.error('Error fetching messages:', error);
-      setError('Impossible de récupérer les messages. Veuillez réessayer plus tard.');
-      toast({
-        title: "Erreur",
-        description: "Impossible de récupérer les messages",
-        variant: "destructive",
-      });
+      setError('Impossible de récupérer les messages. ' + (error.message || 'Veuillez réessayer plus tard.'));
+      
+      // Si erreur d'authentification, supprimer le token
+      if (error.message && (
+        error.message.includes('token') || 
+        error.message.includes('unauthorized') || 
+        error.message.includes('Unauthorized')
+      )) {
+        toast({
+          title: "Session expirée",
+          description: "Votre session a expiré. Veuillez vous reconnecter.",
+          variant: "destructive",
+        });
+        localStorage.removeItem('adminToken');
+        // Force refresh to redirect to login
+        window.location.href = '/admin';
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les messages",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -63,16 +98,22 @@ const MessagesList = () => {
 
   const markAsResponded = async (id: string) => {
     try {
-      await contactApi.markResponded(id);
+      const response = await contactApi.markResponded(id);
+      
+      if (response.error) {
+        throw new Error(response.message);
+      }
+      
       // Update local state
       setMessages(messages.map(msg => 
         msg._id === id ? { ...msg, responded: true } : msg
       ));
+      
       toast({
         title: "Succès",
         description: "Message marqué comme lu",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking message as responded:', error);
       toast({
         title: "Erreur",
@@ -88,20 +129,26 @@ const MessagesList = () => {
     }
 
     try {
-      await contactApi.deleteMessage(id);
+      const response = await contactApi.deleteMessage(id);
+      
+      if (response.error) {
+        throw new Error(response.message);
+      }
+      
       setMessages(messages.filter(msg => msg._id !== id));
       if (selectedMessage?._id === id) {
         setSelectedMessage(null);
         setDrawerOpen(false);
       }
+      
       toast({
         title: "Suppression réussie",
         description: "Le message a été supprimé avec succès",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer le message",
+        description: "Impossible de supprimer le message: " + (error.message || "Erreur inconnue"),
         variant: "destructive",
       });
     }
@@ -111,19 +158,49 @@ const MessagesList = () => {
     fetchMessages();
   };
 
+  // Si pas de token, afficher message
+  if (!localStorage.getItem('adminToken')) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Messages</h1>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Accès non autorisé</AlertTitle>
+          <AlertDescription>
+            Vous devez être connecté pour accéder aux messages. 
+            <Button variant="link" onClick={() => window.location.href = '/admin'}>
+              Se connecter
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Messages</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Actualiser
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                Chargement...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Actualiser
+              </>
+            )}
           </Button>
-          <Button variant="outline">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            {messages.filter(m => !m.responded).length} non lus
-          </Button>
+          {!isLoading && !error && (
+            <Button variant="outline">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              {messages.filter(m => !m.responded).length} non lus
+            </Button>
+          )}
         </div>
       </div>
 
@@ -138,8 +215,12 @@ const MessagesList = () => {
               <p>Chargement des messages...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-red-500">
-              <p className="mb-4">{error}</p>
+            <div className="text-center py-12">
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erreur</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
               <Button onClick={handleRefresh}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Réessayer
