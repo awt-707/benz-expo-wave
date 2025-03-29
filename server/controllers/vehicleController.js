@@ -1,5 +1,6 @@
 
 const Vehicle = require('../models/Vehicle');
+const Activity = require('../models/Activity');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -79,6 +80,20 @@ exports.createVehicle = async (req, res) => {
     
     await vehicle.save();
     console.log('Vehicle created successfully:', vehicle._id);
+    
+    // Log activity
+    try {
+      const Activity = require('../models/Activity');
+      await Activity.create({
+        type: 'vehicle',
+        action: 'Nouveau véhicule créé',
+        details: `${vehicle.make} ${vehicle.model} (${vehicle.year})`,
+        user: req.user?.username || 'admin'
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+    
     res.status(201).json(vehicle);
   } catch (error) {
     console.error('Error in createVehicle:', error);
@@ -95,6 +110,20 @@ exports.updateVehicle = async (req, res) => {
       console.log(`Vehicle not found with ID: ${req.params.id}`);
       return res.status(404).json({ message: 'Vehicle not found' });
     }
+    
+    // Log activity
+    try {
+      const Activity = require('../models/Activity');
+      await Activity.create({
+        type: 'vehicle',
+        action: 'Véhicule mis à jour',
+        details: `${vehicle.make} ${vehicle.model} (${vehicle.year})`,
+        user: req.user?.username || 'admin'
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+    
     console.log('Vehicle updated successfully');
     res.status(200).json(vehicle);
   } catch (error) {
@@ -123,6 +152,19 @@ exports.deleteVehicle = async (req, res) => {
       }
     });
     
+    // Log activity
+    try {
+      const Activity = require('../models/Activity');
+      await Activity.create({
+        type: 'vehicle',
+        action: 'Véhicule supprimé',
+        details: `${vehicle.make} ${vehicle.model} (${vehicle.year})`,
+        user: req.user?.username || 'admin'
+      });
+    } catch (activityError) {
+      console.error('Error logging activity:', activityError);
+    }
+    
     console.log(`Vehicle deleted successfully. Removed ${deletedImages} associated images.`);
     res.status(200).json({ message: 'Vehicle deleted successfully' });
   } catch (error) {
@@ -133,6 +175,7 @@ exports.deleteVehicle = async (req, res) => {
 
 // Upload vehicle images
 exports.uploadImages = (req, res) => {
+  console.log('Vehicle ID for image upload:', req.params.id);
   const uploadMultiple = upload.array('images', 10); // Allow up to 10 images
 
   uploadMultiple(req, res, async (err) => {
@@ -144,6 +187,7 @@ exports.uploadImages = (req, res) => {
     try {
       console.log(`Uploaded ${req.files.length} images`);
       const fileUrls = req.files.map(file => `/vehicles/${file.filename}`);
+      console.log('Generated file URLs:', fileUrls);
       
       if (req.params.id) {
         // Update existing vehicle with new images
@@ -157,6 +201,20 @@ exports.uploadImages = (req, res) => {
         vehicle.images = [...vehicle.images, ...fileUrls];
         await vehicle.save();
         console.log('Images added to vehicle successfully');
+        
+        // Log activity
+        try {
+          const Activity = require('../models/Activity');
+          await Activity.create({
+            type: 'vehicle',
+            action: 'Images ajoutées',
+            details: `${req.files.length} images ajoutées à ${vehicle.make} ${vehicle.model}`,
+            user: req.user?.username || 'admin'
+          });
+        } catch (activityError) {
+          console.error('Error logging activity:', activityError);
+        }
+        
         return res.status(200).json(vehicle);
       }
       

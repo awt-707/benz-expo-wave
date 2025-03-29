@@ -51,7 +51,9 @@ export const vehiclesApi = {
         body: JSON.stringify(vehicleData),
       });
       if (!response.ok) {
-        throw new Error(`Failed to create vehicle: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(errorData.message || `Failed to create vehicle: ${response.status} ${response.statusText}`);
       }
       return await response.json();
     } catch (error) {
@@ -70,7 +72,9 @@ export const vehiclesApi = {
         body: JSON.stringify(vehicleData),
       });
       if (!response.ok) {
-        throw new Error(`Failed to update vehicle: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(errorData.message || `Failed to update vehicle: ${response.status} ${response.statusText}`);
       }
       return await response.json();
     } catch (error) {
@@ -88,7 +92,9 @@ export const vehiclesApi = {
         headers: getAuthHeaders(),
       });
       if (!response.ok) {
-        throw new Error(`Failed to delete vehicle: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(errorData.message || `Failed to delete vehicle: ${response.status} ${response.statusText}`);
       }
       return await response.json();
     } catch (error) {
@@ -100,6 +106,7 @@ export const vehiclesApi = {
   // Upload images
   uploadImages: async (id: string | null, images: File[]) => {
     try {
+      console.log('Uploading images for vehicle:', id, 'Number of images:', images.length);
       const token = localStorage.getItem('adminToken');
       const formData = new FormData();
       
@@ -110,7 +117,8 @@ export const vehiclesApi = {
       const endpoint = id 
         ? `${API_BASE_URL}/vehicles/upload/${id}`
         : `${API_BASE_URL}/vehicles/upload`;
-        
+      
+      console.log('Upload endpoint:', endpoint);
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -119,7 +127,15 @@ export const vehiclesApi = {
         body: formData,
       });
       
-      return handleResponse(response);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(errorData.message || `Failed to upload images: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Upload response:', result);
+      return result;
     } catch (error) {
       console.error('Error uploading vehicle images:', error);
       throw error;

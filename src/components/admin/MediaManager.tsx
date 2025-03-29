@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, Trash, Image } from 'lucide-react';
+import { Upload, Trash, Image, RefreshCw } from 'lucide-react';
 import { API_BASE_URL, mediaApi } from '@/services/api';
 
 interface MediaFile {
@@ -18,15 +18,20 @@ const MediaManager = () => {
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchMedia = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      console.log('Fetching media files...');
       const data = await mediaApi.getAll();
+      console.log('Media files fetched:', data);
       setMediaFiles(data);
     } catch (error) {
       console.error('Error fetching media:', error);
+      setError('Impossible de récupérer les médias');
       toast({
         title: "Erreur",
         description: "Impossible de récupérer les médias",
@@ -46,18 +51,23 @@ const MediaManager = () => {
     
     const file = e.target.files[0];
     setUploadLoading(true);
+    setError(null);
     
     try {
-      await mediaApi.upload(file);
+      console.log('Uploading file:', file.name);
+      const result = await mediaApi.upload(file);
+      console.log('Upload result:', result);
+      
       toast({
         title: "Succès",
         description: "Média téléchargé avec succès",
       });
       
-      // Rafraîchir la liste des médias
+      // Refresh the media list
       fetchMedia();
     } catch (error) {
       console.error('Error uploading media:', error);
+      setError('Impossible de télécharger le fichier');
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le fichier",
@@ -65,7 +75,7 @@ const MediaManager = () => {
       });
     } finally {
       setUploadLoading(false);
-      // Réinitialiser l'input file
+      // Reset the file input
       e.target.value = '';
     }
   };
@@ -73,17 +83,22 @@ const MediaManager = () => {
   const handleDelete = async (filename: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce média ?')) return;
     
+    setError(null);
     try {
+      console.log('Deleting file:', filename);
       await mediaApi.delete(filename);
+      console.log('File deleted successfully');
+      
       toast({
         title: "Succès",
         description: "Média supprimé avec succès",
       });
       
-      // Mettre à jour la liste
+      // Update the list
       setMediaFiles(prev => prev.filter(file => file.filename !== filename));
     } catch (error) {
       console.error('Error deleting media:', error);
+      setError('Impossible de supprimer le fichier');
       toast({
         title: "Erreur",
         description: "Impossible de supprimer le fichier",
@@ -93,7 +108,9 @@ const MediaManager = () => {
   };
 
   const copyToClipboard = (url: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}${url}`);
+    const fullUrl = `${window.location.origin}${url}`;
+    console.log('Copying URL to clipboard:', fullUrl);
+    navigator.clipboard.writeText(fullUrl);
     toast({
       title: "Lien copié",
       description: "URL du média copiée dans le presse-papier",
@@ -111,6 +128,10 @@ const MediaManager = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Gestionnaire de médias</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={fetchMedia} disabled={isLoading}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualiser
+          </Button>
           <Input
             type="file"
             id="media-upload"
@@ -126,6 +147,12 @@ const MediaManager = () => {
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
+          {error}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="text-center py-8">Chargement des médias...</div>
@@ -144,6 +171,10 @@ const MediaManager = () => {
                   src={`${API_BASE_URL}${file.url}`}
                   alt={file.filename}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error(`Error loading image: ${file.url}`);
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <Button
@@ -156,7 +187,9 @@ const MediaManager = () => {
                 </div>
               </div>
               <CardContent className="p-3">
-                <div className="truncate text-xs text-gray-500">{file.filename}</div>
+                <div className="truncate text-xs text-gray-500" title={file.filename}>
+                  {file.filename}
+                </div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
                   <Button variant="ghost" size="sm" onClick={() => copyToClipboard(file.url)}>
