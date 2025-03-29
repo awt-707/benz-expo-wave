@@ -7,12 +7,7 @@ export const vehiclesApi = {
     try {
       console.log('Fetching all vehicles...');
       const response = await fetch(`${API_BASE_URL}/vehicles`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch vehicles: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log('Fetched vehicles:', data);
-      return data;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
@@ -50,12 +45,7 @@ export const vehiclesApi = {
         headers: getAuthHeaders(),
         body: JSON.stringify(vehicleData),
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(errorData.message || `Failed to create vehicle: ${response.status} ${response.statusText}`);
-      }
-      return await response.json();
+      return handleResponse(response);
     } catch (error) {
       console.error('Error creating vehicle:', error);
       throw error;
@@ -71,12 +61,7 @@ export const vehiclesApi = {
         headers: getAuthHeaders(),
         body: JSON.stringify(vehicleData),
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(errorData.message || `Failed to update vehicle: ${response.status} ${response.statusText}`);
-      }
-      return await response.json();
+      return handleResponse(response);
     } catch (error) {
       console.error(`Error updating vehicle with ID ${id}:`, error);
       throw error;
@@ -91,12 +76,7 @@ export const vehiclesApi = {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(errorData.message || `Failed to delete vehicle: ${response.status} ${response.statusText}`);
-      }
-      return await response.json();
+      return handleResponse(response);
     } catch (error) {
       console.error(`Error deleting vehicle with ID ${id}:`, error);
       throw error;
@@ -127,15 +107,7 @@ export const vehiclesApi = {
         body: formData,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(errorData.message || `Failed to upload images: ${response.status} ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      console.log('Upload response:', result);
-      return result;
+      return handleResponse(response);
     } catch (error) {
       console.error('Error uploading vehicle images:', error);
       throw error;

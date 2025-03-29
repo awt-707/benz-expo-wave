@@ -121,8 +121,8 @@ const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Static files served from: ${path.join(__dirname, 'uploads')}`);
-  console.log(`Media URL prefix: ${API_BASE_URL}/media`);
-  console.log(`Vehicles URL prefix: ${API_BASE_URL}/vehicles`);
+  console.log(`Media URL prefix: /media`);
+  console.log(`Vehicles URL prefix: /vehicles`);
 });
 
 module.exports = app;

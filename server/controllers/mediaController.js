@@ -43,13 +43,20 @@ exports.getAllMedia = async (req, res) => {
 
 // Télécharger un média
 exports.uploadMediaFile = (req, res) => {
-  console.log('Uploading media file');
+  console.log('Uploading media file request received');
+  
+  const mediaDir = path.join(__dirname, '../uploads/media');
+  if (!fs.existsSync(mediaDir)) {
+    fs.mkdirSync(mediaDir, { recursive: true });
+    console.log('Media directory created');
+  }
+  
   const uploadSingle = upload.uploadMedia.single('media');
   
   uploadSingle(req, res, async (err) => {
     if (err) {
       console.error('Error in uploadMediaFile:', err);
-      return res.status(400).json({ message: err });
+      return res.status(400).json({ message: err.message || String(err) });
     }
     
     if (!req.file) {
