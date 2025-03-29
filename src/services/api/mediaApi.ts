@@ -1,5 +1,5 @@
 
-import { API_BASE_URL, handleResponse, getAuthHeaders, handleApiError } from './apiUtils';
+import { API_BASE_URL, handleResponse, getAuthHeaders } from './apiUtils';
 
 export const mediaApi = {
   // Get all media
@@ -21,6 +21,11 @@ export const mediaApi = {
     try {
       console.log('Uploading media file:', file.name, 'Size:', file.size);
       const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const formData = new FormData();
       formData.append('media', file);
       
@@ -33,6 +38,7 @@ export const mediaApi = {
         body: formData,
       });
       
+      console.log('Media upload response status:', response.status);
       return handleResponse(response);
     } catch (error) {
       console.error('Error uploading media:', error);

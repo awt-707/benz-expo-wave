@@ -20,27 +20,46 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
-console.log('Connecting to MongoDB...');
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB successfully'))
-.catch(err => console.error('Could not connect to MongoDB', err));
+console.log('Connecting to MongoDB with URI:', process.env.MONGODB_URI.substring(0, 20) + '...');
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB successfully'))
+  .catch(err => {
+    console.error('Failed to connect to MongoDB:', err.message);
+    process.exit(1); // Exit the application on connection failure
+  });
+
+// Create upload directories if they don't exist
+const createUploadDirs = () => {
+  const dirs = [
+    path.join(__dirname, 'uploads'),
+    path.join(__dirname, 'uploads/vehicles'),
+    path.join(__dirname, 'uploads/media'),
+    path.join(__dirname, 'uploads/videos')
+  ];
+
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      console.log(`Creating directory: ${dir}`);
+      fs.mkdirSync(dir, { recursive: true });
+    } else {
+      console.log(`Directory already exists: ${dir}`);
+    }
+  });
+};
 
 // Ensure upload directories exist
-const createDirs = [
-  path.join(__dirname, 'uploads'),
-  path.join(__dirname, 'uploads/vehicles'),
-  path.join(__dirname, 'uploads/media'),
-  path.join(__dirname, 'uploads/videos')
-];
+createUploadDirs();
 
-createDirs.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    console.log(`Creating directory: ${dir}`);
-    fs.mkdirSync(dir, { recursive: true });
-  }
+// Setup static file serving - BEFORE the routes
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/media', express.static(path.join(__dirname, 'uploads/media')));
+app.use('/vehicles', express.static(path.join(__dirname, 'uploads/vehicles')));
+app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
+
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
 });
 
 // Routes
@@ -54,13 +73,6 @@ app.use('/api/media', mediaRoutes);
 app.get('/', (req, res) => {
   res.send('3ansdz API is running');
 });
-
-// Serve uploaded files
-console.log('Setting up static file serving...');
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/media', express.static(path.join(__dirname, 'uploads/media')));
-app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
-app.use('/vehicles', express.static(path.join(__dirname, 'uploads/vehicles')));
 
 // Debug routes
 app.get('/api/check-uploads', (req, res) => {
@@ -104,7 +116,7 @@ app.get('/api/check-media', (req, res) => {
 // 404 handler
 app.use((req, res, next) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ message: 'Ressource not found' });
+  res.status(404).json({ message: 'Resource not found' });
 });
 
 // Error handling middleware
@@ -120,9 +132,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`MongoDB connection: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Not connected'}`);
   console.log(`Static files served from: ${path.join(__dirname, 'uploads')}`);
-  console.log(`Media URL prefix: /media`);
-  console.log(`Vehicles URL prefix: /vehicles`);
+  console.log(`API base URL: http://localhost:${PORT}/api`);
 });
 
 module.exports = app;

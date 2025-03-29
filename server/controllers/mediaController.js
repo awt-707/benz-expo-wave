@@ -1,91 +1,106 @@
 
 const fs = require('fs');
 const path = require('path');
-const upload = require('../middleware/upload');
+const multer = require('multer');
 const Activity = require('../models/Activity');
 
-// Obtenir tous les médias
+// Setup storage for media files
+const mediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = './uploads/media';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+// Check file type
+const fileFilter = (req, file, cb) => {
+  const filetypes = /jpeg|jpg|png|webp|svg|gif/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Error: Images only!'));
+  }
+};
+
+const upload = multer({
+  storage: mediaStorage,
+  limits: { fileSize: 10000000 }, // 10MB
+  fileFilter
+}).single('media');
+
+// Get all media files
 exports.getAllMedia = async (req, res) => {
   try {
-    console.log('Fetching all media files');
     const mediaDir = path.join(__dirname, '../uploads/media');
     
-    // Créer le répertoire s'il n'existe pas
     if (!fs.existsSync(mediaDir)) {
       fs.mkdirSync(mediaDir, { recursive: true });
-      console.log('Media directory created');
       return res.status(200).json([]);
     }
     
-    // Lire le contenu du répertoire
     const files = fs.readdirSync(mediaDir);
-    console.log(`Found ${files.length} media files`);
     
-    // Construire la liste des médias avec métadonnées
     const mediaFiles = files.map(file => {
-      const filePath = path.join(mediaDir, file);
-      const stats = fs.statSync(filePath);
-      
       return {
         filename: file,
         url: `/media/${file}`,
-        size: stats.size,
-        createdAt: stats.birthtime
+        type: path.extname(file).substring(1),
+        size: fs.statSync(path.join(mediaDir, file)).size
       };
     });
     
     res.status(200).json(mediaFiles);
   } catch (error) {
-    console.error('Error in getAllMedia:', error);
+    console.error('Error fetching media files:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Télécharger un média
+// Upload a new media file
 exports.uploadMediaFile = (req, res) => {
-  console.log('Uploading media file request received');
-  
-  const mediaDir = path.join(__dirname, '../uploads/media');
-  if (!fs.existsSync(mediaDir)) {
-    fs.mkdirSync(mediaDir, { recursive: true });
-    console.log('Media directory created');
-  }
-  
-  const uploadSingle = upload.uploadMedia.single('media');
-  
-  uploadSingle(req, res, async (err) => {
+  upload(req, res, async (err) => {
     if (err) {
-      console.error('Error in uploadMediaFile:', err);
-      return res.status(400).json({ message: err.message || String(err) });
+      console.error('Error uploading media:', err);
+      return res.status(400).json({ message: err.message });
     }
-    
+
     if (!req.file) {
-      console.error('No file uploaded');
-      return res.status(400).json({ message: 'Aucun fichier téléchargé' });
+      return res.status(400).json({ message: 'No file uploaded' });
     }
-    
+
     try {
-      const fileUrl = `/media/${req.file.filename}`;
-      console.log('File uploaded successfully:', req.file.filename);
+      console.log('Uploaded media file:', req.file);
+      
+      // Create media file object
+      const mediaFile = {
+        filename: req.file.filename,
+        url: `/media/${req.file.filename}`,
+        type: path.extname(req.file.filename).substring(1),
+        size: req.file.size
+      };
       
       // Log activity
       try {
         await Activity.create({
-          type: 'media',
-          action: 'Média téléchargé',
-          details: `${req.file.filename} (${req.file.size} octets)`,
+          type: 'admin',
+          action: 'Nouveau média ajouté',
+          details: req.file.filename,
           user: req.user?.username || 'admin'
         });
       } catch (activityError) {
         console.error('Error logging activity:', activityError);
       }
       
-      res.status(200).json({ 
-        message: 'Média téléchargé avec succès',
-        url: fileUrl,
-        filename: req.file.filename,
-        size: req.file.size
-      });
+      res.status(201).json(mediaFile);
     } catch (error) {
       console.error('Error processing uploaded media:', error);
       res.status(500).json({ message: error.message });
@@ -93,25 +108,22 @@ exports.uploadMediaFile = (req, res) => {
   });
 };
 
-// Supprimer un média
+// Delete a media file
 exports.deleteMedia = async (req, res) => {
   try {
-    const { filename } = req.params;
-    console.log('Deleting media file:', filename);
+    const filename = req.params.filename;
     const filePath = path.join(__dirname, '../uploads/media', filename);
     
     if (!fs.existsSync(filePath)) {
-      console.error('File not found:', filename);
-      return res.status(404).json({ message: 'Fichier non trouvé' });
+      return res.status(404).json({ message: 'File not found' });
     }
     
     fs.unlinkSync(filePath);
-    console.log('File deleted successfully:', filename);
     
     // Log activity
     try {
       await Activity.create({
-        type: 'media',
+        type: 'admin',
         action: 'Média supprimé',
         details: filename,
         user: req.user?.username || 'admin'
@@ -120,9 +132,9 @@ exports.deleteMedia = async (req, res) => {
       console.error('Error logging activity:', activityError);
     }
     
-    res.status(200).json({ message: 'Média supprimé avec succès' });
+    res.status(200).json({ message: 'File deleted successfully' });
   } catch (error) {
-    console.error('Error in deleteMedia:', error);
+    console.error('Error deleting media file:', error);
     res.status(500).json({ message: error.message });
   }
 };

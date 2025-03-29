@@ -17,6 +17,7 @@ export const vehiclesApi = {
   // Get featured vehicles
   getFeatured: async () => {
     try {
+      console.log('Fetching featured vehicles...');
       const response = await fetch(`${API_BASE_URL}/vehicles/featured`);
       return handleResponse(response);
     } catch (error) {
@@ -28,6 +29,7 @@ export const vehiclesApi = {
   // Get single vehicle
   getById: async (id: string) => {
     try {
+      console.log(`Fetching vehicle with ID: ${id}`);
       const response = await fetch(`${API_BASE_URL}/vehicles/${id}`);
       return handleResponse(response);
     } catch (error) {
@@ -88,9 +90,15 @@ export const vehiclesApi = {
     try {
       console.log('Uploading images for vehicle:', id, 'Number of images:', images.length);
       const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const formData = new FormData();
       
-      images.forEach(image => {
+      images.forEach((image, index) => {
+        console.log(`Adding image ${index + 1} to form:`, image.name, image.size);
         formData.append('images', image);
       });
       
@@ -107,6 +115,7 @@ export const vehiclesApi = {
         body: formData,
       });
       
+      console.log('Vehicle images upload response status:', response.status);
       return handleResponse(response);
     } catch (error) {
       console.error('Error uploading vehicle images:', error);

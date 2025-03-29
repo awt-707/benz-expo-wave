@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
   }
 });
 
@@ -28,7 +28,7 @@ const fileFilter = (req, file, cb) => {
   if (mimetype && extname) {
     return cb(null, true);
   } else {
-    cb('Error: Images only!');
+    cb(new Error('Error: Images only!'));
   }
 };
 
@@ -83,7 +83,6 @@ exports.createVehicle = async (req, res) => {
     
     // Log activity
     try {
-      const Activity = require('../models/Activity');
       await Activity.create({
         type: 'vehicle',
         action: 'Nouveau véhicule créé',
@@ -113,7 +112,6 @@ exports.updateVehicle = async (req, res) => {
     
     // Log activity
     try {
-      const Activity = require('../models/Activity');
       await Activity.create({
         type: 'vehicle',
         action: 'Véhicule mis à jour',
@@ -154,7 +152,6 @@ exports.deleteVehicle = async (req, res) => {
     
     // Log activity
     try {
-      const Activity = require('../models/Activity');
       await Activity.create({
         type: 'vehicle',
         action: 'Véhicule supprimé',
@@ -181,10 +178,14 @@ exports.uploadImages = (req, res) => {
   uploadMultiple(req, res, async (err) => {
     if (err) {
       console.error('Error in uploadImages:', err);
-      return res.status(400).json({ message: err });
+      return res.status(400).json({ message: err.message });
     }
 
     try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No files uploaded' });
+      }
+      
       console.log(`Uploaded ${req.files.length} images`);
       const fileUrls = req.files.map(file => `/vehicles/${file.filename}`);
       console.log('Generated file URLs:', fileUrls);
@@ -204,7 +205,6 @@ exports.uploadImages = (req, res) => {
         
         // Log activity
         try {
-          const Activity = require('../models/Activity');
           await Activity.create({
             type: 'vehicle',
             action: 'Images ajoutées',
