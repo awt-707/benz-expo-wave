@@ -20,7 +20,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
-console.log('Connecting to MongoDB with URI:', process.env.MONGODB_URI.substring(0, 20) + '...');
+console.log('Connecting to MongoDB with URI:', process.env.MONGODB_URI ? `${process.env.MONGODB_URI.substring(0, 20)}...` : 'undefined');
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB successfully'))
   .catch(err => {
@@ -111,6 +111,20 @@ app.get('/api/check-media', (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Test route for contact API
+app.get('/api/test-contact', (req, res) => {
+  res.json({
+    message: "Contact API test route working",
+    contactApiEndpoints: [
+      { method: "POST", path: "/api/contact", description: "Submit a contact form" },
+      { method: "GET", path: "/api/contact", description: "Get all contacts (admin only)" },
+      { method: "GET", path: "/api/contact/:id", description: "Get a single contact (admin only)" },
+      { method: "PUT", path: "/api/contact/:id/respond", description: "Mark contact as responded (admin only)" },
+      { method: "DELETE", path: "/api/contact/:id", description: "Delete a contact (admin only)" }
+    ]
+  });
 });
 
 // 404 handler

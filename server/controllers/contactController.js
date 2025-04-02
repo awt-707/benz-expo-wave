@@ -26,6 +26,8 @@ exports.submitContact = async (req, res) => {
       return res.status(400).json({ message: 'Name, email and message are required' });
     }
     
+    console.log('Received contact form submission:', { name, email, phone, message });
+    
     // Create new contact
     const contact = new Contact({
       name,
@@ -35,6 +37,7 @@ exports.submitContact = async (req, res) => {
     });
     
     await contact.save();
+    console.log('Contact saved to database with ID:', contact._id);
     
     // Log activity
     try {
@@ -43,6 +46,7 @@ exports.submitContact = async (req, res) => {
         action: 'Nouveau message',
         details: `De: ${name} (${email})`,
       });
+      console.log('Activity logged for new message');
     } catch (activityError) {
       console.error('Error logging activity:', activityError);
     }

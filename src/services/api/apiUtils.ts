@@ -10,10 +10,18 @@ export const handleResponse = async (response: Response) => {
     try {
       const errorData = await response.json();
       console.error('API error response:', errorData);
-      throw new Error(errorData.message || `API error: ${response.status}`);
+      return { 
+        error: true, 
+        message: errorData.message || `API error: ${response.status}`,
+        status: response.status 
+      };
     } catch (parseError) {
       console.error('Error parsing API error response:', parseError);
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
+      return { 
+        error: true, 
+        message: `API error: ${response.status} ${response.statusText}`,
+        status: response.status
+      };
     }
   }
   
@@ -23,7 +31,11 @@ export const handleResponse = async (response: Response) => {
     return data;
   } catch (parseError) {
     console.error('Error parsing API success response:', parseError);
-    throw new Error('Failed to parse server response');
+    return { 
+      error: true, 
+      message: 'Failed to parse server response',
+      status: response.status
+    };
   }
 };
 
