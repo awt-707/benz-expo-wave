@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Car } from 'lucide-react';
 import { contactApi } from '@/services/api';
+import { Textarea } from '@/components/ui/textarea';
 
 const ContactForm = () => {
   const { toast } = useToast();
@@ -51,9 +52,9 @@ const ContactForm = () => {
     try {
       // Convert form data to the expected API format
       const contactData = {
-        name: formData.nom,
+        name: formData.name,
         email: formData.email,
-        phone: formData.telephone,
+        phone: formData.phone,
         message: formData.message,
       };
       
@@ -106,17 +107,17 @@ const ContactForm = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <Label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">
+          <Label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
             Nom complet
           </Label>
           <Input
-            id="nom"
-            name="nom"
+            id="name"
+            name="name"
             type="text"
             required
             className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
             placeholder="Votre nom"
-            value={formData.nom}
+            value={formData.name}
             onChange={handleChange}
           />
         </div>
@@ -139,16 +140,16 @@ const ContactForm = () => {
       </div>
       
       <div>
-        <Label htmlFor="telephone" className="block text-sm font-medium text-gray-700 mb-1">
+        <Label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
           Téléphone
         </Label>
         <Input
-          id="telephone"
-          name="telephone"
+          id="phone"
+          name="phone"
           type="tel"
           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-mercedes-blue focus:border-mercedes-blue transition-colors"
           placeholder="+213 123 456 789"
-          value={formData.telephone}
+          value={formData.phone}
           onChange={handleChange}
         />
       </div>
@@ -157,7 +158,7 @@ const ContactForm = () => {
         <Label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
           Message
         </Label>
-        <textarea
+        <Textarea
           id="message"
           name="message"
           rows={5}
