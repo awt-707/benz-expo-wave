@@ -34,7 +34,8 @@ const createUploadDirs = () => {
     path.join(__dirname, 'uploads'),
     path.join(__dirname, 'uploads/vehicles'),
     path.join(__dirname, 'uploads/media'),
-    path.join(__dirname, 'uploads/videos')
+    path.join(__dirname, 'uploads/videos'),
+    path.join(__dirname, 'uploads/temp')
   ];
 
   dirs.forEach(dir => {
@@ -87,7 +88,8 @@ app.get('/api/check-uploads', (req, res) => {
     res.json({ 
       exists: true, 
       fileCount: files.length,
-      files: files.slice(0, 20) // Return first 20 files to avoid overwhelming response
+      files: files.slice(0, 20), // Return first 20 files to avoid overwhelming response
+      path: vehiclesDir
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -106,7 +108,8 @@ app.get('/api/check-media', (req, res) => {
     res.json({ 
       exists: true, 
       fileCount: files.length,
-      files: files.slice(0, 20) // Return first 20 files to avoid overwhelming response
+      files: files.slice(0, 20), // Return first 20 files to avoid overwhelming response
+      path: mediaDir
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

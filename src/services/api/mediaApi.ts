@@ -1,5 +1,5 @@
 
-import { API_BASE_URL, handleResponse, getAuthHeaders } from './apiUtils';
+import { API_BASE_URL, handleResponse, getAuthHeaders, handleApiError } from './apiUtils';
 
 export const mediaApi = {
   // Get all media
@@ -12,7 +12,7 @@ export const mediaApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error fetching media:', error);
-      throw error;
+      return handleApiError(error);
     }
   },
   
@@ -23,7 +23,7 @@ export const mediaApi = {
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        throw new Error('Authentication required');
+        return { error: true, message: 'Authentication required' };
       }
       
       const formData = new FormData();
@@ -42,7 +42,7 @@ export const mediaApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error uploading media:', error);
-      throw error;
+      return handleApiError(error);
     }
   },
   
@@ -58,7 +58,7 @@ export const mediaApi = {
       return handleResponse(response);
     } catch (error) {
       console.error(`Error deleting media ${filename}:`, error);
-      throw error;
+      return handleApiError(error);
     }
   }
 };

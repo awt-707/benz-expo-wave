@@ -83,5 +83,17 @@ export const contactApi = {
       console.error(`Error deleting message ${id}:`, error);
       return handleApiError(error);
     }
+  },
+
+  // Test API connection
+  testConnection: async () => {
+    try {
+      console.log('Testing contact API connection...');
+      const response = await fetch(`${API_BASE_URL}/test-contact`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error testing contact API:', error);
+      return handleApiError(error);
+    }
   }
 };

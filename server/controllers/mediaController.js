@@ -1,41 +1,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
+const { uploadMedia } = require('../middleware/upload');
 const Activity = require('../models/Activity');
-
-// Setup storage for media files
-const mediaStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = './uploads/media';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-
-// Check file type
-const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|webp|svg|gif/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb(new Error('Error: Images only!'));
-  }
-};
-
-const upload = multer({
-  storage: mediaStorage,
-  limits: { fileSize: 10000000 }, // 10MB
-  fileFilter
-}).single('media');
 
 // Get all media files
 exports.getAllMedia = async (req, res) => {
@@ -50,11 +17,15 @@ exports.getAllMedia = async (req, res) => {
     const files = fs.readdirSync(mediaDir);
     
     const mediaFiles = files.map(file => {
+      const filePath = path.join(mediaDir, file);
+      const stats = fs.statSync(filePath);
+      
       return {
         filename: file,
         url: `/media/${file}`,
         type: path.extname(file).substring(1),
-        size: fs.statSync(path.join(mediaDir, file)).size
+        size: stats.size,
+        createdAt: stats.mtime.toISOString()
       };
     });
     
@@ -67,7 +38,7 @@ exports.getAllMedia = async (req, res) => {
 
 // Upload a new media file
 exports.uploadMediaFile = (req, res) => {
-  upload(req, res, async (err) => {
+  uploadMedia.single('media')(req, res, async (err) => {
     if (err) {
       console.error('Error uploading media:', err);
       return res.status(400).json({ message: err.message });
@@ -85,7 +56,8 @@ exports.uploadMediaFile = (req, res) => {
         filename: req.file.filename,
         url: `/media/${req.file.filename}`,
         type: path.extname(req.file.filename).substring(1),
-        size: req.file.size
+        size: req.file.size,
+        createdAt: new Date().toISOString()
       };
       
       // Log activity

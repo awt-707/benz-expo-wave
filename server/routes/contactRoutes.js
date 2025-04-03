@@ -4,10 +4,10 @@ const router = express.Router();
 const contactController = require('../controllers/contactController');
 const { verifyToken } = require('../middleware/auth');
 
-// Public routes
+// Public route - Anyone can submit a contact form
 router.post('/', contactController.submitContact);
 
-// Admin routes (protected)
+// Protected routes - Admin only
 router.get('/', verifyToken, contactController.getContacts);
 router.get('/:id', verifyToken, contactController.getContact);
 router.put('/:id/respond', verifyToken, contactController.markResponded);

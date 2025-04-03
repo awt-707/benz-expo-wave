@@ -9,4 +9,16 @@ router.get('/', verifyToken, mediaController.getAllMedia);
 router.post('/upload', verifyToken, mediaController.uploadMediaFile);
 router.delete('/:filename', verifyToken, mediaController.deleteMedia);
 
+// Test route
+router.get('/test', (req, res) => {
+  res.json({
+    message: 'Media API test route working',
+    endpoints: [
+      { method: 'GET', path: '/api/media', description: 'Get all media' },
+      { method: 'POST', path: '/api/media/upload', description: 'Upload media' },
+      { method: 'DELETE', path: '/api/media/:filename', description: 'Delete media' }
+    ]
+  });
+});
+
 module.exports = router;

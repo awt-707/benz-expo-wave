@@ -13,19 +13,19 @@ const vehicleStorage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
   }
 });
 
 const imageFileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|webp/;
+  const filetypes = /jpeg|jpg|png|webp|gif/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
   if (mimetype && extname) {
     return cb(null, true);
   } else {
-    cb('Erreur: Images uniquement!');
+    cb(new Error('Erreur: Images uniquement!'));
   }
 };
 
@@ -51,9 +51,23 @@ const videoFileFilter = (req, file, cb) => {
   if (mimetype && extname) {
     return cb(null, true);
   } else {
-    cb('Erreur: Vidéos uniquement!');
+    cb(new Error('Erreur: Vidéos uniquement!'));
   }
 };
+
+// Configuration pour les médias généraux
+const mediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = './uploads/media';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
+  }
+});
 
 // Exports
 exports.uploadVehicleImages = multer({
@@ -66,20 +80,6 @@ exports.uploadVideo = multer({
   storage: videoStorage,
   limits: { fileSize: 100000000 }, // 100MB
   fileFilter: videoFileFilter
-});
-
-// Configuration pour les médias généraux
-const mediaStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = './uploads/media';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
 });
 
 exports.uploadMedia = multer({

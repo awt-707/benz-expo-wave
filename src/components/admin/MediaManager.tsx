@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, Trash, Image, RefreshCw } from 'lucide-react';
+import { Upload, Trash, Image, RefreshCw, Copy, Check } from 'lucide-react';
 import { API_BASE_URL, mediaApi } from '@/services/api';
 
 interface MediaFile {
@@ -12,6 +12,7 @@ interface MediaFile {
   url: string;
   size: number;
   createdAt: string;
+  type?: string;
 }
 
 const MediaManager = () => {
@@ -19,6 +20,7 @@ const MediaManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchMedia = async () => {
@@ -27,8 +29,13 @@ const MediaManager = () => {
       setError(null);
       console.log('Fetching media files...');
       const data = await mediaApi.getAll();
+      
+      if (data.error) {
+        throw new Error(data.message || 'Erreur lors de la récupération des médias');
+      }
+      
       console.log('Media files fetched:', data);
-      setMediaFiles(data);
+      setMediaFiles(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching media:', error);
       setError('Impossible de récupérer les médias');
@@ -54,8 +61,13 @@ const MediaManager = () => {
     setError(null);
     
     try {
-      console.log('Uploading file:', file.name);
+      console.log('Uploading file:', file.name, 'Size:', file.size);
       const result = await mediaApi.upload(file);
+      
+      if (result.error) {
+        throw new Error(result.message || 'Erreur lors du téléchargement du fichier');
+      }
+      
       console.log('Upload result:', result);
       
       toast({
@@ -86,7 +98,12 @@ const MediaManager = () => {
     setError(null);
     try {
       console.log('Deleting file:', filename);
-      await mediaApi.delete(filename);
+      const result = await mediaApi.delete(filename);
+      
+      if (result.error) {
+        throw new Error(result.message || 'Erreur lors de la suppression du fichier');
+      }
+      
       console.log('File deleted successfully');
       
       toast({
@@ -110,11 +127,24 @@ const MediaManager = () => {
   const copyToClipboard = (url: string) => {
     const fullUrl = `${window.location.origin}${url}`;
     console.log('Copying URL to clipboard:', fullUrl);
-    navigator.clipboard.writeText(fullUrl);
-    toast({
-      title: "Lien copié",
-      description: "URL du média copiée dans le presse-papier",
-    });
+    navigator.clipboard.writeText(fullUrl)
+      .then(() => {
+        setCopiedUrl(url);
+        setTimeout(() => setCopiedUrl(null), 2000);
+        
+        toast({
+          title: "Lien copié",
+          description: "URL du média copiée dans le presse-papier",
+        });
+      })
+      .catch(err => {
+        console.error('Failed to copy URL:', err);
+        toast({
+          title: "Erreur",
+          description: "Impossible de copier l'URL",
+          variant: "destructive",
+        });
+      });
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -123,14 +153,27 @@ const MediaManager = () => {
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch (error) {
+      return 'Date inconnue';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Gestionnaire de médias</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={fetchMedia} disabled={isLoading}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Chargement...' : 'Actualiser'}
           </Button>
           <Input
             type="file"
@@ -140,7 +183,7 @@ const MediaManager = () => {
             accept="image/*"
           />
           <Button asChild disabled={uploadLoading}>
-            <label htmlFor="media-upload">
+            <label htmlFor="media-upload" className="cursor-pointer">
               <Upload className="mr-2 h-4 w-4" />
               {uploadLoading ? 'Téléchargement...' : 'Télécharger un média'}
             </label>
@@ -155,7 +198,10 @@ const MediaManager = () => {
       )}
 
       {isLoading ? (
-        <div className="text-center py-8">Chargement des médias...</div>
+        <div className="text-center py-8">
+          <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-4 text-gray-400" />
+          <p>Chargement des médias...</p>
+        </div>
       ) : mediaFiles.length === 0 ? (
         <div className="text-center py-8 border rounded-lg bg-gray-50">
           <Image className="mx-auto h-12 w-12 text-gray-400" />
@@ -181,6 +227,7 @@ const MediaManager = () => {
                     variant="destructive"
                     size="icon"
                     onClick={() => handleDelete(file.filename)}
+                    className="rounded-full"
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
@@ -192,10 +239,30 @@ const MediaManager = () => {
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
-                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(file.url)}>
-                    Copier URL
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => copyToClipboard(file.url)}
+                    className="h-8 px-2"
+                  >
+                    {copiedUrl === file.url ? (
+                      <>
+                        <Check className="h-3 w-3 mr-1" />
+                        Copié
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copier URL
+                      </>
+                    )}
                   </Button>
                 </div>
+                {file.createdAt && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {formatDate(file.createdAt)}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
