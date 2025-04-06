@@ -41,7 +41,9 @@ const SiteSettings = () => {
     const fetchConfig = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching site configuration...');
         const data = await adminApi.getSiteConfig();
+        console.log('Received site configuration:', data);
         
         // Ensure all required properties exist
         const completeConfig = {
@@ -85,6 +87,7 @@ const SiteSettings = () => {
       ...prev,
       ...newConfig
     }));
+    console.log('Updated config:', {...config, ...newConfig});
   };
 
   if (isLoading) {

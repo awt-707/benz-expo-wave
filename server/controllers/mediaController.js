@@ -8,12 +8,15 @@ const cloudinary = require('../utils/cloudinaryConfig');
 // Get all media files
 exports.getAllMedia = async (req, res) => {
   try {
+    console.log('Getting all media files from Cloudinary');
     // Récupérer les médias depuis Cloudinary
     const result = await cloudinary.api.resources({
       type: 'upload',
       prefix: 'media/',
       max_results: 100
     });
+    
+    console.log(`Found ${result.resources.length} resources in Cloudinary`);
     
     const mediaFiles = result.resources.map(resource => {
       return {
@@ -50,6 +53,7 @@ exports.uploadMediaFile = (req, res) => {
       const filePath = req.file.path;
       
       // Upload to Cloudinary
+      console.log('Uploading to Cloudinary...');
       const cloudinaryResult = await cloudinary.uploader.upload(filePath, {
         folder: 'media',
         resource_type: 'auto'
@@ -94,6 +98,7 @@ exports.uploadMediaFile = (req, res) => {
 exports.deleteMedia = async (req, res) => {
   try {
     const filename = req.params.filename;
+    console.log('Deleting media file:', filename);
     
     // Rechercher l'identifiant Cloudinary à partir du nom du fichier
     const result = await cloudinary.api.resources({
@@ -108,11 +113,15 @@ exports.deleteMedia = async (req, res) => {
     );
     
     if (!mediaFile) {
+      console.log('Media file not found in Cloudinary');
       return res.status(404).json({ message: 'File not found' });
     }
     
+    console.log('Found media in Cloudinary:', mediaFile.public_id);
+    
     // Supprimer de Cloudinary
-    await cloudinary.uploader.destroy(mediaFile.public_id);
+    const deleteResult = await cloudinary.uploader.destroy(mediaFile.public_id);
+    console.log('Cloudinary delete result:', deleteResult);
     
     // Log activity
     try {
@@ -130,5 +139,24 @@ exports.deleteMedia = async (req, res) => {
   } catch (error) {
     console.error('Error deleting media file:', error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Ajouter une route de test pour vérifier la configuration Cloudinary
+exports.testCloudinary = async (req, res) => {
+  try {
+    const testResult = await cloudinary.api.ping();
+    res.status(200).json({
+      status: 'success',
+      message: 'Cloudinary connection successful',
+      result: testResult
+    });
+  } catch (error) {
+    console.error('Error testing Cloudinary connection:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Cloudinary connection failed',
+      error: error.message
+    });
   }
 };

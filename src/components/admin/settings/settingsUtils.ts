@@ -31,7 +31,12 @@ export interface SiteConfigType {
 
 export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> => {
   try {
+    console.log('Saving site config:', config);
     const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error("Authentication token is missing");
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
       method: 'PUT',
       headers: {
@@ -42,8 +47,13 @@ export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> =
     });
     
     if (!response.ok) {
-      throw new Error('Erreur lors de la sauvegarde de la configuration');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error response from server:', errorData);
+      throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la configuration');
     }
+    
+    const data = await response.json();
+    console.log('Site config saved successfully:', data);
     
     toast({
       title: "Configuration sauvegardée",
@@ -55,7 +65,7 @@ export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> =
     console.error('Error saving site config:', error);
     toast({
       title: "Erreur",
-      description: "Impossible de sauvegarder la configuration.",
+      description: "Impossible de sauvegarder la configuration: " + (error instanceof Error ? error.message : "erreur inconnue"),
       variant: "destructive",
     });
     return false;
@@ -64,7 +74,12 @@ export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> =
 
 export const uploadVideo = async (videoFile: File): Promise<string | null> => {
   try {
+    console.log('Uploading video:', videoFile.name, 'Size:', videoFile.size);
     const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error("Authentication token is missing");
+    }
+    
     const formData = new FormData();
     formData.append('video', videoFile);
     
@@ -77,16 +92,19 @@ export const uploadVideo = async (videoFile: File): Promise<string | null> => {
     });
     
     if (!response.ok) {
-      throw new Error('Erreur lors de l\'upload de la vidéo');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error uploading video:', errorData);
+      throw new Error(errorData.message || 'Erreur lors de l\'upload de la vidéo');
     }
     
     const data = await response.json();
+    console.log('Video uploaded successfully:', data);
     return data.videoUrl;
   } catch (error) {
     console.error('Error uploading video:', error);
     toast({
       title: "Erreur",
-      description: "Impossible de télécharger la vidéo.",
+      description: "Impossible de télécharger la vidéo: " + (error instanceof Error ? error.message : "erreur inconnue"),
       variant: "destructive",
     });
     return null;
@@ -98,7 +116,12 @@ export const saveCustomPage = async (
   pageData: { title: string; content: string }
 ): Promise<boolean> => {
   try {
+    console.log('Saving custom page:', pageKey, pageData);
     const token = localStorage.getItem('adminToken');
+    if (!token) {
+      throw new Error("Authentication token is missing");
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
       method: 'PUT',
       headers: {
@@ -109,8 +132,13 @@ export const saveCustomPage = async (
     });
     
     if (!response.ok) {
-      throw new Error('Erreur lors de la sauvegarde de la page');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error saving custom page:', errorData);
+      throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la page');
     }
+    
+    const data = await response.json();
+    console.log('Custom page saved successfully:', data);
     
     toast({
       title: "Page sauvegardée",
@@ -122,7 +150,7 @@ export const saveCustomPage = async (
     console.error('Error saving custom page:', error);
     toast({
       title: "Erreur",
-      description: "Impossible de sauvegarder la page.",
+      description: "Impossible de sauvegarder la page: " + (error instanceof Error ? error.message : "erreur inconnue"),
       variant: "destructive",
     });
     return false;
@@ -136,9 +164,11 @@ export const handleInputChange = (
   field?: string
 ): Partial<SiteConfigType> => {
   const { name, value } = e.target;
+  console.log('Input change:', section, field, name, value);
   
   if (section && field) {
     return {
+      ...config,
       [section]: {
         ...(config[section as keyof SiteConfigType] as Record<string, any>),
         [field]: value
@@ -146,6 +176,7 @@ export const handleInputChange = (
     };
   } else {
     return {
+      ...config,
       [name]: value
     };
   }
