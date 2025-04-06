@@ -5,15 +5,27 @@ dotenv.config();
 
 // Configuration de Cloudinary avec les identifiants
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'demo',
-  api_key: process.env.CLOUDINARY_API_KEY || '123456789012345',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'abcdefghijklmnopqrstuvwxyz12'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // Vérifier la configuration
 console.log('Cloudinary configuration:');
-console.log('- Cloud name:', process.env.CLOUDINARY_CLOUD_NAME || 'demo');
+console.log('- Cloud name:', process.env.CLOUDINARY_CLOUD_NAME);
 console.log('- API Key set:', process.env.CLOUDINARY_API_KEY ? 'Yes' : 'No');
 console.log('- API Secret set:', process.env.CLOUDINARY_API_SECRET ? 'Yes' : 'No');
+
+// Ajouter une méthode pour tester la connexion
+cloudinary.testConnection = async () => {
+  try {
+    const result = await cloudinary.api.ping();
+    console.log('Cloudinary connection test successful:', result);
+    return { success: true, result };
+  } catch (error) {
+    console.error('Cloudinary connection test failed:', error);
+    return { success: false, error: error.message };
+  }
+};
 
 module.exports = cloudinary;

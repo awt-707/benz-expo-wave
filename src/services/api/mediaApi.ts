@@ -16,6 +16,20 @@ export const mediaApi = {
     }
   },
   
+  // Test Cloudinary connection
+  testCloudinaryConnection: async () => {
+    try {
+      console.log('Testing Cloudinary connection...');
+      const response = await fetch(`${API_BASE_URL}/media/test-cloudinary`, {
+        headers: getAuthHeaders(),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error testing Cloudinary connection:', error);
+      return handleApiError(error);
+    }
+  },
+  
   // Upload media
   upload: async (file: File) => {
     try {

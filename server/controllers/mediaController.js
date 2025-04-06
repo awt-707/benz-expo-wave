@@ -9,6 +9,17 @@ const cloudinary = require('../utils/cloudinaryConfig');
 exports.getAllMedia = async (req, res) => {
   try {
     console.log('Getting all media files from Cloudinary');
+    
+    // Test connection before proceeding
+    const connectionTest = await cloudinary.testConnection();
+    if (!connectionTest.success) {
+      console.error('Cloudinary connection failed:', connectionTest.error);
+      return res.status(500).json({ 
+        message: 'Erreur de connexion avec Cloudinary', 
+        error: connectionTest.error
+      });
+    }
+    
     // Récupérer les médias depuis Cloudinary
     const result = await cloudinary.api.resources({
       type: 'upload',
@@ -16,9 +27,9 @@ exports.getAllMedia = async (req, res) => {
       max_results: 100
     });
     
-    console.log(`Found ${result.resources.length} resources in Cloudinary`);
+    console.log(`Found ${result.resources?.length || 0} resources in Cloudinary`);
     
-    const mediaFiles = result.resources.map(resource => {
+    const mediaFiles = result.resources?.map(resource => {
       return {
         filename: resource.public_id.split('/').pop(),
         url: resource.secure_url,
@@ -27,7 +38,7 @@ exports.getAllMedia = async (req, res) => {
         createdAt: resource.created_at,
         cloudinary_id: resource.public_id
       };
-    });
+    }) || [];
     
     res.status(200).json(mediaFiles);
   } catch (error) {
@@ -52,6 +63,16 @@ exports.uploadMediaFile = (req, res) => {
       console.log('Uploaded media file locally:', req.file);
       const filePath = req.file.path;
       
+      // Test connection before proceeding
+      const connectionTest = await cloudinary.testConnection();
+      if (!connectionTest.success) {
+        // Delete local file
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+        throw new Error(`Erreur de connexion avec Cloudinary: ${connectionTest.error}`);
+      }
+      
       // Upload to Cloudinary
       console.log('Uploading to Cloudinary...');
       const cloudinaryResult = await cloudinary.uploader.upload(filePath, {
@@ -62,7 +83,9 @@ exports.uploadMediaFile = (req, res) => {
       console.log('Uploaded to Cloudinary:', cloudinaryResult);
       
       // Delete local file after upload to Cloudinary
-      fs.unlinkSync(filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       
       // Create media file object
       const mediaFile = {
@@ -89,6 +112,10 @@ exports.uploadMediaFile = (req, res) => {
       res.status(201).json(mediaFile);
     } catch (error) {
       console.error('Error processing uploaded media:', error);
+      // Delete local file if it exists
+      if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
       res.status(500).json({ message: error.message });
     }
   });
@@ -99,6 +126,12 @@ exports.deleteMedia = async (req, res) => {
   try {
     const filename = req.params.filename;
     console.log('Deleting media file:', filename);
+    
+    // Test connection before proceeding
+    const connectionTest = await cloudinary.testConnection();
+    if (!connectionTest.success) {
+      throw new Error(`Erreur de connexion avec Cloudinary: ${connectionTest.error}`);
+    }
     
     // Rechercher l'identifiant Cloudinary à partir du nom du fichier
     const result = await cloudinary.api.resources({
@@ -145,12 +178,21 @@ exports.deleteMedia = async (req, res) => {
 // Ajouter une route de test pour vérifier la configuration Cloudinary
 exports.testCloudinary = async (req, res) => {
   try {
-    const testResult = await cloudinary.api.ping();
-    res.status(200).json({
-      status: 'success',
-      message: 'Cloudinary connection successful',
-      result: testResult
-    });
+    const testResult = await cloudinary.testConnection();
+    
+    if (testResult.success) {
+      res.status(200).json({
+        status: 'success',
+        message: 'Cloudinary connection successful',
+        result: testResult.result
+      });
+    } else {
+      res.status(500).json({
+        status: 'error',
+        message: 'Cloudinary connection failed',
+        error: testResult.error
+      });
+    }
   } catch (error) {
     console.error('Error testing Cloudinary connection:', error);
     res.status(500).json({

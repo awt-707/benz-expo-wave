@@ -4,8 +4,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, Trash, Image, RefreshCw, Copy, Check } from 'lucide-react';
+import { Upload, Trash, Image, RefreshCw, Copy, Check, AlertTriangle } from 'lucide-react';
 import { mediaApi } from '@/services/api';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MediaFile {
   filename: string;
@@ -22,12 +23,43 @@ const MediaManager = () => {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [cloudinaryStatus, setCloudinaryStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const { toast } = useToast();
+
+  const testCloudinaryConnection = async () => {
+    try {
+      setCloudinaryStatus('checking');
+      const result = await mediaApi.testCloudinaryConnection();
+      
+      if (result.error || result.status === 'error') {
+        console.error('Cloudinary connection failed:', result);
+        setCloudinaryStatus('error');
+        return false;
+      }
+      
+      console.log('Cloudinary connection successful');
+      setCloudinaryStatus('ok');
+      return true;
+    } catch (error) {
+      console.error('Error testing Cloudinary connection:', error);
+      setCloudinaryStatus('error');
+      return false;
+    }
+  };
 
   const fetchMedia = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Test Cloudinary connection first
+      const connectionOk = await testCloudinaryConnection();
+      if (!connectionOk) {
+        setError('Erreur de connexion avec Cloudinary. Veuillez vérifier la configuration.');
+        setIsLoading(false);
+        return;
+      }
+      
       console.log('Fetching media files...');
       const data = await mediaApi.getAll();
       
@@ -62,6 +94,12 @@ const MediaManager = () => {
     setError(null);
     
     try {
+      // Verify Cloudinary connection first
+      const connectionOk = await testCloudinaryConnection();
+      if (!connectionOk) {
+        throw new Error('Erreur de connexion avec Cloudinary. Veuillez vérifier la configuration.');
+      }
+      
       console.log('Uploading file:', file.name, 'Size:', file.size);
       const result = await mediaApi.upload(file);
       
@@ -80,10 +118,10 @@ const MediaManager = () => {
       fetchMedia();
     } catch (error) {
       console.error('Error uploading media:', error);
-      setError('Impossible de télécharger le fichier');
+      setError(error instanceof Error ? error.message : 'Impossible de télécharger le fichier');
       toast({
         title: "Erreur",
-        description: "Impossible de télécharger le fichier",
+        description: error instanceof Error ? error.message : "Impossible de télécharger le fichier",
         variant: "destructive",
       });
     } finally {
@@ -98,6 +136,12 @@ const MediaManager = () => {
     
     setError(null);
     try {
+      // Verify Cloudinary connection first
+      const connectionOk = await testCloudinaryConnection();
+      if (!connectionOk) {
+        throw new Error('Erreur de connexion avec Cloudinary. Veuillez vérifier la configuration.');
+      }
+      
       console.log('Deleting file:', filename);
       const result = await mediaApi.delete(filename);
       
@@ -116,10 +160,10 @@ const MediaManager = () => {
       setMediaFiles(prev => prev.filter(file => file.filename !== filename));
     } catch (error) {
       console.error('Error deleting media:', error);
-      setError('Impossible de supprimer le fichier');
+      setError(error instanceof Error ? error.message : 'Impossible de supprimer le fichier');
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer le fichier",
+        description: error instanceof Error ? error.message : "Impossible de supprimer le fichier",
         variant: "destructive",
       });
     }
@@ -182,7 +226,7 @@ const MediaManager = () => {
             onChange={handleUpload}
             accept="image/*"
           />
-          <Button asChild disabled={uploadLoading}>
+          <Button asChild disabled={uploadLoading || cloudinaryStatus === 'error'}>
             <label htmlFor="media-upload" className="cursor-pointer">
               <Upload className="mr-2 h-4 w-4" />
               {uploadLoading ? 'Téléchargement...' : 'Télécharger un média'}
@@ -191,10 +235,22 @@ const MediaManager = () => {
         </div>
       </div>
 
+      {cloudinaryStatus === 'error' && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erreur de connexion</AlertTitle>
+          <AlertDescription>
+            Impossible de se connecter à Cloudinary. Veuillez vérifier votre configuration.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
-          {error}
-        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {isLoading ? (
