@@ -15,6 +15,7 @@ const adminSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    required: false,
     trim: true
   },
   isActive: {
@@ -22,11 +23,12 @@ const adminSchema = new mongoose.Schema({
     default: true
   },
   lastLogin: {
-    type: Date
+    type: Date,
+    default: null
   },
   role: {
     type: String,
-    enum: ['admin', 'superadmin'],
+    enum: ['admin', 'editor'],
     default: 'admin'
   },
   createdAt: {
@@ -35,25 +37,19 @@ const adminSchema = new mongoose.Schema({
   }
 });
 
-// Hash password before saving
+// Hacher le mot de passe avant de sauvegarder
 adminSchema.pre('save', async function(next) {
-  // Only hash the password if it's modified (or new)
-  if (!this.isModified('password')) return next();
-  
-  try {
-    // Generate a salt
-    const salt = await bcrypt.genSalt(10);
-    // Hash the password with the salt
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
   }
+  next();
 });
 
-// Method to compare password for login
+// Méthode pour comparer les mots de passe
 adminSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('Admin', adminSchema);
+const Admin = mongoose.model('Admin', adminSchema);
+
+module.exports = Admin;

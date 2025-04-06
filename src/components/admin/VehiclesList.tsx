@@ -3,10 +3,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { Plus, Pencil, Trash, Eye, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { vehiclesApi } from '@/services/api';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import VehicleItem from './VehicleItem';
 
 interface Vehicle {
   _id: string;
@@ -25,6 +35,8 @@ const VehiclesList = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -33,6 +45,11 @@ const VehiclesList = () => {
       setIsLoading(true);
       setError(null);
       const data = await vehiclesApi.getAll();
+      
+      if (data.error) {
+        throw new Error(data.message || 'Erreur lors de la récupération des véhicules');
+      }
+      
       console.log('Fetched vehicles:', data);
       setVehicles(data);
     } catch (error) {
@@ -52,14 +69,22 @@ const VehiclesList = () => {
     fetchVehicles();
   }, []);
 
-  const handleDeleteVehicle = async (id: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce véhicule ?")) {
-      return;
-    }
+  const confirmDeleteVehicle = (id: string) => {
+    setVehicleToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleDeleteVehicle = async () => {
+    if (!vehicleToDelete) return;
+    
     try {
-      await vehiclesApi.delete(id);
-      setVehicles(vehicles.filter(vehicle => vehicle._id !== id));
+      const result = await vehiclesApi.delete(vehicleToDelete);
+      
+      if (result.error) {
+        throw new Error(result.message || 'Erreur lors de la suppression');
+      }
+      
+      setVehicles(vehicles.filter(vehicle => vehicle._id !== vehicleToDelete));
       toast({
         title: "Suppression réussie",
         description: "Le véhicule a été supprimé avec succès",
@@ -71,15 +96,14 @@ const VehiclesList = () => {
         description: "Impossible de supprimer le véhicule",
         variant: "destructive",
       });
+    } finally {
+      setVehicleToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
   const handleAddVehicle = () => {
     navigate('/admin/vehicles/add');
-  };
-
-  const handleEditVehicle = (id: string) => {
-    navigate(`/admin/vehicles/edit/${id}`);
   };
 
   const handleRefresh = () => {
@@ -91,9 +115,9 @@ const VehiclesList = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Véhicules</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Actualiser
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Chargement...' : 'Actualiser'}
           </Button>
           <Button onClick={handleAddVehicle}>
             <Plus className="mr-2 h-4 w-4" /> Ajouter un véhicule
@@ -103,75 +127,94 @@ const VehiclesList = () => {
 
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">Tous</TabsTrigger>
-          <TabsTrigger value="available">Disponibles</TabsTrigger>
-          <TabsTrigger value="sold">Vendus</TabsTrigger>
-          <TabsTrigger value="reserved">Réservés</TabsTrigger>
+          <TabsTrigger value="all">
+            Tous ({vehicles.length})
+          </TabsTrigger>
+          <TabsTrigger value="available">
+            Disponibles ({vehicles.filter(v => v.status === 'available').length})
+          </TabsTrigger>
+          <TabsTrigger value="sold">
+            Vendus ({vehicles.filter(v => v.status === 'sold').length})
+          </TabsTrigger>
+          <TabsTrigger value="reserved">
+            Réservés ({vehicles.filter(v => v.status === 'reserved').length})
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="all">
-          <VehicleTable 
+          <VehicleGrid 
             vehicles={vehicles} 
             isLoading={isLoading} 
             error={error}
-            onDelete={handleDeleteVehicle}
-            onEdit={handleEditVehicle}
+            onDelete={confirmDeleteVehicle}
             onRefresh={handleRefresh}
           />
         </TabsContent>
         
         <TabsContent value="available">
-          <VehicleTable 
+          <VehicleGrid 
             vehicles={vehicles.filter(v => v.status === 'available')} 
             isLoading={isLoading} 
             error={error}
-            onDelete={handleDeleteVehicle}
-            onEdit={handleEditVehicle}
+            onDelete={confirmDeleteVehicle}
             onRefresh={handleRefresh}
           />
         </TabsContent>
         
         <TabsContent value="sold">
-          <VehicleTable 
+          <VehicleGrid 
             vehicles={vehicles.filter(v => v.status === 'sold')} 
             isLoading={isLoading} 
             error={error}
-            onDelete={handleDeleteVehicle}
-            onEdit={handleEditVehicle}
+            onDelete={confirmDeleteVehicle}
             onRefresh={handleRefresh}
           />
         </TabsContent>
         
         <TabsContent value="reserved">
-          <VehicleTable 
+          <VehicleGrid 
             vehicles={vehicles.filter(v => v.status === 'reserved')} 
             isLoading={isLoading} 
             error={error}
-            onDelete={handleDeleteVehicle}
-            onEdit={handleEditVehicle}
+            onDelete={confirmDeleteVehicle}
             onRefresh={handleRefresh}
           />
         </TabsContent>
       </Tabs>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteVehicle} className="bg-red-500 text-white">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
 
-interface VehicleTableProps {
+interface VehicleGridProps {
   vehicles: Vehicle[];
   isLoading: boolean;
   error: string | null;
   onDelete: (id: string) => void;
-  onEdit: (id: string) => void;
   onRefresh: () => void;
 }
 
-const VehicleTable: React.FC<VehicleTableProps> = ({ 
+const VehicleGrid: React.FC<VehicleGridProps> = ({ 
   vehicles, 
   isLoading, 
   error,
-  onDelete, 
-  onEdit,
+  onDelete,
   onRefresh
 }) => {
   if (isLoading) {
@@ -209,60 +252,14 @@ const VehicleTable: React.FC<VehicleTableProps> = ({
   }
 
   return (
-    <div className="border rounded-md mt-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Marque</TableHead>
-            <TableHead>Modèle</TableHead>
-            <TableHead>Année</TableHead>
-            <TableHead>Prix</TableHead>
-            <TableHead>Kilométrage</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {vehicles.map((vehicle) => (
-            <TableRow key={vehicle._id}>
-              <TableCell>{vehicle.make}</TableCell>
-              <TableCell>{vehicle.model}</TableCell>
-              <TableCell>{vehicle.year}</TableCell>
-              <TableCell>{vehicle.price.toLocaleString('fr-FR')} €</TableCell>
-              <TableCell>
-                {vehicle.specifications?.mileage 
-                  ? `${vehicle.specifications.mileage.toLocaleString('fr-FR')} km`
-                  : 'N/A'}
-              </TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  vehicle.status === 'available' ? 'bg-green-100 text-green-800' :
-                  vehicle.status === 'sold' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {vehicle.status === 'available' ? 'Disponible' :
-                   vehicle.status === 'sold' ? 'Vendu' : 'Réservé'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <a href={`/vehicules/${vehicle._id}`} target="_blank" rel="noopener noreferrer">
-                      <Eye className="h-4 w-4" />
-                    </a>
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onEdit(vehicle._id)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onDelete(vehicle._id)}>
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+      {vehicles.map((vehicle) => (
+        <VehicleItem 
+          key={vehicle._id} 
+          vehicle={vehicle} 
+          onDelete={onDelete} 
+        />
+      ))}
     </div>
   );
 };

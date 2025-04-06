@@ -12,8 +12,9 @@ export const handleResponse = async (response: Response) => {
       console.error('API error response:', errorData);
       return { 
         error: true, 
-        message: errorData.message || `API error: ${response.status}`,
-        status: response.status 
+        message: errorData.message || `API error: ${response.status} ${response.statusText}`,
+        status: response.status,
+        details: errorData
       };
     } catch (parseError) {
       console.error('Error parsing API error response:', parseError);
@@ -31,6 +32,12 @@ export const handleResponse = async (response: Response) => {
     return data;
   } catch (parseError) {
     console.error('Error parsing API success response:', parseError);
+    
+    // If response is empty but status is OK, return a success object
+    if (response.status >= 200 && response.status < 300) {
+      return { success: true, status: response.status };
+    }
+    
     return { 
       error: true, 
       message: 'Failed to parse server response',
@@ -101,4 +108,10 @@ export const refreshAdminToken = async () => {
     console.error('Error refreshing token:', error);
     return false;
   }
+};
+
+// Helper to clear the auth data and return to login
+export const logoutAndRedirect = () => {
+  localStorage.removeItem('adminToken');
+  window.location.href = '/admin';
 };

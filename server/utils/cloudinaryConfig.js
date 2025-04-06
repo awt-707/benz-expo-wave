@@ -24,7 +24,7 @@ cloudinary.testConnection = async () => {
     return { success: true, result };
   } catch (error) {
     console.error('Cloudinary connection test failed:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Unknown error' };
   }
 };
 

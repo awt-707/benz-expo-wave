@@ -1,5 +1,5 @@
 
-import { API_BASE_URL, handleResponse, getAuthHeaders } from './apiUtils';
+import { API_BASE_URL, handleResponse, getAuthHeaders, handleApiError } from './apiUtils';
 
 export const vehiclesApi = {
   // Get all vehicles
@@ -10,7 +10,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -22,7 +22,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error fetching featured vehicles:', error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -34,7 +34,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error(`Error fetching vehicle with ID ${id}:`, error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -50,7 +50,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error creating vehicle:', error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -66,7 +66,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error(`Error updating vehicle with ID ${id}:`, error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -81,7 +81,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error(`Error deleting vehicle with ID ${id}:`, error);
-      throw error;
+      return handleApiError(error);
     }
   },
 
@@ -92,7 +92,7 @@ export const vehiclesApi = {
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        throw new Error('Authentication required');
+        return { error: true, message: 'Authentication required' };
       }
       
       const formData = new FormData();
@@ -119,7 +119,7 @@ export const vehiclesApi = {
       return handleResponse(response);
     } catch (error) {
       console.error('Error uploading vehicle images:', error);
-      throw error;
+      return handleApiError(error);
     }
   }
 };

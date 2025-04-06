@@ -43,7 +43,10 @@ exports.getAllMedia = async (req, res) => {
     res.status(200).json(mediaFiles);
   } catch (error) {
     console.error('Error fetching media files from Cloudinary:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      message: 'Erreur lors de la récupération des médias',
+      error: error.message
+    });
   }
 };
 
@@ -116,7 +119,10 @@ exports.uploadMediaFile = (req, res) => {
       if (req.file && req.file.path && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ 
+        message: 'Erreur lors du traitement du média',
+        error: error.message
+      });
     }
   });
 };
@@ -171,7 +177,10 @@ exports.deleteMedia = async (req, res) => {
     res.status(200).json({ message: 'File deleted successfully' });
   } catch (error) {
     console.error('Error deleting media file:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      message: 'Erreur lors de la suppression du média',
+      error: error.message 
+    });
   }
 };
 

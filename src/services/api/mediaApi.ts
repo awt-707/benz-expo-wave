@@ -61,17 +61,17 @@ export const mediaApi = {
   },
   
   // Delete media
-  delete: async (filename: string) => {
+  delete: async (mediaId: string) => {
     try {
-      console.log('Deleting media:', filename);
-      const response = await fetch(`${API_BASE_URL}/media/${filename}`, {
+      console.log('Deleting media:', mediaId);
+      const response = await fetch(`${API_BASE_URL}/media/${mediaId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
       
       return handleResponse(response);
     } catch (error) {
-      console.error(`Error deleting media ${filename}:`, error);
+      console.error(`Error deleting media ${mediaId}:`, error);
       return handleApiError(error);
     }
   }

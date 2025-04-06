@@ -1,6 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/services/api';
+import { adminApi } from '@/services/api';
 
 export interface SiteConfigType {
   homeHeroText: string;
@@ -32,28 +32,13 @@ export interface SiteConfigType {
 export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> => {
   try {
     console.log('Saving site config:', config);
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error("Authentication token is missing");
+    const result = await adminApi.updateSiteConfig(config);
+    
+    if (result.error) {
+      throw new Error(result.message || 'Erreur lors de la sauvegarde de la configuration');
     }
     
-    const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(config),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error response from server:', errorData);
-      throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la configuration');
-    }
-    
-    const data = await response.json();
-    console.log('Site config saved successfully:', data);
+    console.log('Site config saved successfully:', result);
     
     toast({
       title: "Configuration sauvegardée",
@@ -75,31 +60,18 @@ export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> =
 export const uploadVideo = async (videoFile: File): Promise<string | null> => {
   try {
     console.log('Uploading video:', videoFile.name, 'Size:', videoFile.size);
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error("Authentication token is missing");
+    const result = await adminApi.uploadVideo(videoFile);
+    
+    if (result.error) {
+      throw new Error(result.message || 'Erreur lors de l\'upload de la vidéo');
     }
     
-    const formData = new FormData();
-    formData.append('video', videoFile);
-    
-    const response = await fetch(`${API_BASE_URL}/admin/upload-video`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
+    console.log('Video uploaded successfully:', result);
+    toast({
+      title: "Vidéo uploadée",
+      description: "La vidéo a été téléchargée avec succès.",
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error uploading video:', errorData);
-      throw new Error(errorData.message || 'Erreur lors de l\'upload de la vidéo');
-    }
-    
-    const data = await response.json();
-    console.log('Video uploaded successfully:', data);
-    return data.videoUrl;
+    return result.videoUrl;
   } catch (error) {
     console.error('Error uploading video:', error);
     toast({
@@ -117,28 +89,13 @@ export const saveCustomPage = async (
 ): Promise<boolean> => {
   try {
     console.log('Saving custom page:', pageKey, pageData);
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      throw new Error("Authentication token is missing");
+    const result = await adminApi.saveCustomPage(pageKey, pageData);
+    
+    if (result.error) {
+      throw new Error(result.message || 'Erreur lors de la sauvegarde de la page');
     }
     
-    const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(pageData),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error saving custom page:', errorData);
-      throw new Error(errorData.message || 'Erreur lors de la sauvegarde de la page');
-    }
-    
-    const data = await response.json();
-    console.log('Custom page saved successfully:', data);
+    console.log('Custom page saved successfully:', result);
     
     toast({
       title: "Page sauvegardée",
@@ -166,18 +123,21 @@ export const handleInputChange = (
   const { name, value } = e.target;
   console.log('Input change:', section, field, name, value);
   
+  // Créer une copie profonde pour éviter les références
+  const newConfig = JSON.parse(JSON.stringify(config));
+  
   if (section && field) {
-    return {
-      ...config,
-      [section]: {
-        ...(config[section as keyof SiteConfigType] as Record<string, any>),
-        [field]: value
-      }
-    };
-  } else {
-    return {
-      ...config,
-      [name]: value
-    };
+    // Assurons-nous que la section existe
+    if (!newConfig[section]) {
+      newConfig[section] = {};
+    }
+    
+    // Mettre à jour le champ
+    newConfig[section][field] = value;
+  } else if (name) {
+    // Mise à jour directe si name est fourni
+    newConfig[name] = value;
   }
+  
+  return newConfig;
 };
