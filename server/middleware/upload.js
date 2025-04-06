@@ -55,10 +55,10 @@ const videoFileFilter = (req, file, cb) => {
   }
 };
 
-// Configuration pour les médias généraux
+// Configuration pour les médias généraux (utilisé maintenant pour stocker temporairement avant l'upload vers Cloudinary)
 const mediaStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = './uploads/media';
+    const dir = './uploads/temp';
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

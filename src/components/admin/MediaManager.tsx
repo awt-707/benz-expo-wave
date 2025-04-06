@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, Trash, Image, RefreshCw, Copy, Check } from 'lucide-react';
-import { API_BASE_URL, mediaApi } from '@/services/api';
+import { mediaApi } from '@/services/api';
 
 interface MediaFile {
   filename: string;
@@ -13,6 +13,7 @@ interface MediaFile {
   size: number;
   createdAt: string;
   type?: string;
+  cloudinary_id?: string;
 }
 
 const MediaManager = () => {
@@ -125,9 +126,8 @@ const MediaManager = () => {
   };
 
   const copyToClipboard = (url: string) => {
-    const fullUrl = `${window.location.origin}${url}`;
-    console.log('Copying URL to clipboard:', fullUrl);
-    navigator.clipboard.writeText(fullUrl)
+    console.log('Copying URL to clipboard:', url);
+    navigator.clipboard.writeText(url)
       .then(() => {
         setCopiedUrl(url);
         setTimeout(() => setCopiedUrl(null), 2000);
@@ -214,7 +214,7 @@ const MediaManager = () => {
             <Card key={file.filename} className="overflow-hidden">
               <div className="aspect-square relative group">
                 <img
-                  src={`${API_BASE_URL}${file.url}`}
+                  src={file.url}
                   alt={file.filename}
                   className="w-full h-full object-cover"
                   onError={(e) => {

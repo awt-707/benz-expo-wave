@@ -3,35 +3,32 @@ const fs = require('fs');
 const path = require('path');
 const { uploadMedia } = require('../middleware/upload');
 const Activity = require('../models/Activity');
+const cloudinary = require('../utils/cloudinaryConfig');
 
 // Get all media files
 exports.getAllMedia = async (req, res) => {
   try {
-    const mediaDir = path.join(__dirname, '../uploads/media');
+    // Récupérer les médias depuis Cloudinary
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'media/',
+      max_results: 100
+    });
     
-    if (!fs.existsSync(mediaDir)) {
-      fs.mkdirSync(mediaDir, { recursive: true });
-      return res.status(200).json([]);
-    }
-    
-    const files = fs.readdirSync(mediaDir);
-    
-    const mediaFiles = files.map(file => {
-      const filePath = path.join(mediaDir, file);
-      const stats = fs.statSync(filePath);
-      
+    const mediaFiles = result.resources.map(resource => {
       return {
-        filename: file,
-        url: `/media/${file}`,
-        type: path.extname(file).substring(1),
-        size: stats.size,
-        createdAt: stats.mtime.toISOString()
+        filename: resource.public_id.split('/').pop(),
+        url: resource.secure_url,
+        type: path.extname(resource.url).substring(1) || 'jpg',
+        size: resource.bytes,
+        createdAt: resource.created_at,
+        cloudinary_id: resource.public_id
       };
     });
     
     res.status(200).json(mediaFiles);
   } catch (error) {
-    console.error('Error fetching media files:', error);
+    console.error('Error fetching media files from Cloudinary:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -49,15 +46,28 @@ exports.uploadMediaFile = (req, res) => {
     }
 
     try {
-      console.log('Uploaded media file:', req.file);
+      console.log('Uploaded media file locally:', req.file);
+      const filePath = req.file.path;
+      
+      // Upload to Cloudinary
+      const cloudinaryResult = await cloudinary.uploader.upload(filePath, {
+        folder: 'media',
+        resource_type: 'auto'
+      });
+      
+      console.log('Uploaded to Cloudinary:', cloudinaryResult);
+      
+      // Delete local file after upload to Cloudinary
+      fs.unlinkSync(filePath);
       
       // Create media file object
       const mediaFile = {
-        filename: req.file.filename,
-        url: `/media/${req.file.filename}`,
-        type: path.extname(req.file.filename).substring(1),
-        size: req.file.size,
-        createdAt: new Date().toISOString()
+        filename: path.basename(req.file.originalname),
+        url: cloudinaryResult.secure_url,
+        type: path.extname(req.file.originalname).substring(1) || 'jpg',
+        size: cloudinaryResult.bytes,
+        createdAt: new Date().toISOString(),
+        cloudinary_id: cloudinaryResult.public_id
       };
       
       // Log activity
@@ -65,7 +75,7 @@ exports.uploadMediaFile = (req, res) => {
         await Activity.create({
           type: 'admin',
           action: 'Nouveau média ajouté',
-          details: req.file.filename,
+          details: mediaFile.filename,
           user: req.user?.username || 'admin'
         });
       } catch (activityError) {
@@ -84,13 +94,25 @@ exports.uploadMediaFile = (req, res) => {
 exports.deleteMedia = async (req, res) => {
   try {
     const filename = req.params.filename;
-    const filePath = path.join(__dirname, '../uploads/media', filename);
     
-    if (!fs.existsSync(filePath)) {
+    // Rechercher l'identifiant Cloudinary à partir du nom du fichier
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      prefix: 'media/',
+      max_results: 100
+    });
+    
+    const mediaFile = result.resources.find(resource => 
+      resource.public_id.split('/').pop() === filename ||
+      resource.public_id === `media/${filename}`
+    );
+    
+    if (!mediaFile) {
       return res.status(404).json({ message: 'File not found' });
     }
     
-    fs.unlinkSync(filePath);
+    // Supprimer de Cloudinary
+    await cloudinary.uploader.destroy(mediaFile.public_id);
     
     // Log activity
     try {
