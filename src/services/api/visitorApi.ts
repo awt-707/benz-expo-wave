@@ -46,7 +46,7 @@ export const visitorApi = {
       const data = await handleResponse(response);
       console.log('Visitor stats retrieved:', data);
       
-      if (data.error) {
+      if (data && data.error) {
         console.error('Error in visitor stats response:', data.message);
         return null;
       }
@@ -56,5 +56,20 @@ export const visitorApi = {
       console.error('Error fetching visitor stats:', error);
       return null;
     }
+  },
+  
+  // Generate mock data for testing or when API is unavailable
+  getMockStats: (): VisitorStats => {
+    return {
+      totalVisitors: Math.floor(Math.random() * 1000) + 100,
+      visitorsLast24Hours: Math.floor(Math.random() * 100) + 10,
+      visitorsLast7Days: Math.floor(Math.random() * 500) + 50,
+      mostVisitedPages: [
+        { _id: 'home', count: Math.floor(Math.random() * 200) + 100 },
+        { _id: 'about', count: Math.floor(Math.random() * 100) + 50 },
+        { _id: 'contact', count: Math.floor(Math.random() * 80) + 30 },
+        { _id: 'vehicles', count: Math.floor(Math.random() * 150) + 70 }
+      ]
+    };
   }
 };

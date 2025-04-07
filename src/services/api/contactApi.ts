@@ -31,9 +31,23 @@ export const contactApi = {
   getMessages: async () => {
     try {
       console.log('Fetching contact messages...');
+      
+      // Check for token first
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        return { error: true, message: 'Not authenticated' };
+      }
+      
       const response = await fetch(`${API_BASE_URL}/contact`, {
         headers: getAuthHeaders(),
       });
+      
+      // Handle network errors and bad responses early
+      if (!response) {
+        console.error('Network error - no response received');
+        return { error: true, message: 'Network error - check your server connection' };
+      }
+      
       return handleResponse(response);
     } catch (error) {
       console.error('Error fetching messages:', error);

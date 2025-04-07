@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Eye, MessageSquare, Trash, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Eye, MessageSquare, Trash, XCircle, RefreshCw, AlertTriangle, WifiOff } from 'lucide-react';
 import { contactApi } from '@/services/api';
 
 interface Message {
@@ -27,12 +27,14 @@ const MessagesList = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
   const { toast } = useToast();
 
   const fetchMessages = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setNetworkError(false);
       
       // Vérifier si token existe, sinon rediriger vers login
       const token = localStorage.getItem('adminToken');
@@ -45,12 +47,22 @@ const MessagesList = () => {
       console.log('Fetching messages...');
       const response = await contactApi.getMessages();
       
+      if (response === null) {
+        setNetworkError(true);
+        throw new Error("Problème de connexion avec le serveur. Veuillez vérifier que le backend est en cours d'exécution.");
+      }
+      
       // Vérifier si response est un array (succès) ou contient une erreur
-      if (response.error) {
-        throw new Error(response.message);
+      if (response && response.error) {
+        if (response.message && response.message.includes('Network error')) {
+          setNetworkError(true);
+        }
+        throw new Error(response.message || "Erreur lors de la récupération des messages");
       }
       
       console.log('Messages fetched successfully:', response);
+      
+      // Si la réponse n'est pas un tableau, utiliser un tableau vide
       setMessages(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
@@ -100,8 +112,8 @@ const MessagesList = () => {
     try {
       const response = await contactApi.markResponded(id);
       
-      if (response.error) {
-        throw new Error(response.message);
+      if (response && response.error) {
+        throw new Error(response.message || "Erreur lors du marquage du message");
       }
       
       // Update local state
@@ -117,7 +129,7 @@ const MessagesList = () => {
       console.error('Error marking message as responded:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de marquer le message comme lu",
+        description: "Impossible de marquer le message comme lu: " + (error.message || "Erreur inconnue"),
         variant: "destructive",
       });
     }
@@ -131,8 +143,8 @@ const MessagesList = () => {
     try {
       const response = await contactApi.deleteMessage(id);
       
-      if (response.error) {
-        throw new Error(response.message);
+      if (response && response.error) {
+        throw new Error(response.message || "Erreur lors de la suppression du message");
       }
       
       setMessages(messages.filter(msg => msg._id !== id));
@@ -213,6 +225,25 @@ const MessagesList = () => {
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
               <p>Chargement des messages...</p>
+            </div>
+          ) : networkError ? (
+            <div className="text-center py-12">
+              <Alert variant="destructive" className="mb-4">
+                <WifiOff className="h-4 w-4" />
+                <AlertTitle>Problème de connexion</AlertTitle>
+                <AlertDescription>
+                  Impossible de se connecter au serveur. Veuillez vérifier que:
+                  <ul className="list-disc pl-4 mt-2">
+                    <li>Le serveur backend est en cours d'exécution</li>
+                    <li>L'URL du backend est correcte dans vos variables d'environnement</li>
+                    <li>Il n'y a pas de problèmes réseau</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+              <Button onClick={handleRefresh}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Réessayer
+              </Button>
             </div>
           ) : error ? (
             <div className="text-center py-12">
