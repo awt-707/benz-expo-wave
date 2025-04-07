@@ -15,7 +15,16 @@ interface OverviewTabProps {
 }
 
 const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
-  const totalVehicles = stats?.counts.vehicles || 0;
+  // Ensure stats is not null with default values
+  const safeStats = stats || {
+    counts: {
+      vehicles: 0,
+      messages: 0,
+      unreadMessages: 0
+    }
+  };
+  
+  const totalVehicles = safeStats.counts.vehicles || 0;
   
   // Calcul des données dérivées pour les véhicules
   const vehicleData = [
@@ -98,8 +107,8 @@ const OverviewTab = ({ stats, visitorData }: OverviewTabProps) => {
               },
               {
                 name: 'Aujourd\'hui',
-                'Reçus': stats?.counts.messages || 24,
-                'Traités': stats?.counts.messages ? stats.counts.messages - stats.counts.unreadMessages : 17
+                'Reçus': safeStats.counts.messages || 24,
+                'Traités': safeStats.counts.messages ? safeStats.counts.messages - safeStats.counts.unreadMessages : 17
               }
             ]}
             index="name"
