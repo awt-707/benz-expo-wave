@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Car, MessageSquare, Users, User, Clock, Download } from 'lucide-react';
 import { API_BASE_URL } from '@/services/api';
+import { adminApi } from '@/services/api/adminApi';
 
 interface Activity {
   _id: string;
@@ -28,19 +29,26 @@ const ActivityLog = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
+        setIsLoading(true);
         const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/admin/activity`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
         
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des activités');
+        if (!token) {
+          throw new Error('No authentication token found');
         }
         
-        const data = await response.json();
-        setActivities(data);
+        // Utiliser l'API structurée pour récupérer les activités
+        const response = await adminApi.getActivityLog();
+        
+        if (response && !response.error) {
+          // Si la réponse contient directement un tableau d'activités
+          const activityData = Array.isArray(response) 
+            ? response 
+            : response.activities || [];
+            
+          setActivities(activityData);
+        } else {
+          throw new Error(response?.message || 'Erreur lors de la récupération des activités');
+        }
       } catch (error) {
         console.error('Error fetching activities:', error);
         toast({
@@ -88,14 +96,22 @@ const ActivityLog = () => {
   }, [toast]);
 
   const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('fr-FR', { 
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return 'Date invalide';
+      }
+      return date.toLocaleDateString('fr-FR', { 
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date invalide';
+    }
   };
 
   const filteredActivities = activities.filter(activity => {

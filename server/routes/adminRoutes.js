@@ -18,7 +18,7 @@ router.put('/custom-page/:pageKey', verifyToken, adminController.updateCustomPag
 // Dashboard stats
 router.get('/dashboard-stats', verifyToken, adminController.getDashboardStats);
 
-// Activity log
+// Activity log - assurons-nous que cette route est correcte
 router.get('/activity', verifyToken, adminController.getActivityLog);
 
 module.exports = router;

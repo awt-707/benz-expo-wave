@@ -37,6 +37,12 @@ export const visitorApi = {
       const response = await fetch(`${API_BASE_URL}/visitors/stats`, {
         headers: getAuthHeaders(),
       });
+      
+      // If the response is not ok, throw an error to be caught below
+      if (!response.ok) {
+        throw new Error(`Error fetching visitor stats: ${response.status}`);
+      }
+      
       const data = await handleResponse(response);
       console.log('Visitor stats retrieved:', data);
       
