@@ -38,8 +38,20 @@ export const visitorApi = {
         headers: getAuthHeaders(),
       });
       
-      // If the response is not ok, throw an error to be caught below
+      // Si la requête échoue à cause d'un problème réseau, le fetch lèvera une exception
+      // Si nous arrivons ici, c'est que nous avons au moins une réponse du serveur
+      
+      // Si la réponse n'est pas OK, gérer l'erreur HTTP
       if (!response.ok) {
+        const errorStatus = response.status;
+        // Différencier les types d'erreurs
+        if (errorStatus === 401) {
+          console.error('Unauthorized access to visitor stats');
+          return null;
+        } else if (errorStatus === 500) {
+          console.error('Server error when fetching visitor stats');
+          return null;
+        }
         throw new Error(`Error fetching visitor stats: ${response.status}`);
       }
       

@@ -23,7 +23,7 @@ const NetworkErrorDisplay = ({ onRetry }: NetworkErrorDisplayProps) => {
           </ul>
         </AlertDescription>
       </Alert>
-      <Button onClick={onRetry}>
+      <Button onClick={onRetry} className="mt-4">
         <RefreshCw className="mr-2 h-4 w-4" />
         Réessayer
       </Button>
