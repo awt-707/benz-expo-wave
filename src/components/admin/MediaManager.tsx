@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const MediaManager = () => {
   const [fileToDelete, setFileToDelete] = useState<MediaFile | null>(null);
   const { toast } = useToast();
 
-  // Vérifier la connexion à Cloudinary au chargement
   useEffect(() => {
     testCloudinaryConnection();
     fetchMediaFiles();
@@ -44,10 +42,11 @@ const MediaManager = () => {
     try {
       const result = await mediaApi.testCloudinaryConnection();
       if (result.error) {
+        console.error('Cloudinary connection error:', result);
         setConnectionStatus('error');
         toast({
           title: "Erreur de connexion à Cloudinary",
-          description: result.message || "Impossible de se connecter à Cloudinary",
+          description: result.message || "Impossible de se connecter à Cloudinary. Vérifiez les clés d'API dans le fichier .env du serveur.",
           variant: "destructive",
         });
       } else {
@@ -58,10 +57,11 @@ const MediaManager = () => {
         });
       }
     } catch (error) {
+      console.error('Error testing Cloudinary connection:', error);
       setConnectionStatus('error');
       toast({
         title: "Erreur de connexion",
-        description: "Impossible de tester la connexion à Cloudinary",
+        description: "Impossible de tester la connexion à Cloudinary. Vérifiez que le serveur est en cours d'exécution.",
         variant: "destructive",
       });
     }
@@ -72,18 +72,20 @@ const MediaManager = () => {
     try {
       const data = await mediaApi.getAll();
       if (data.error) {
+        console.error('Error fetching media files:', data);
         toast({
           title: "Erreur",
-          description: data.message || "Impossible de récupérer les médias",
+          description: data.message || "Impossible de récupérer les médias. Vérifiez la connexion à Cloudinary.",
           variant: "destructive",
         });
       } else {
-        setMediaFiles(data);
+        setMediaFiles(data || []);
       }
     } catch (error) {
+      console.error('Error in fetchMediaFiles:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les médias",
+        description: "Impossible de charger les médias. Vérifiez que le serveur est en cours d'exécution.",
         variant: "destructive",
       });
     } finally {
@@ -111,7 +113,6 @@ const MediaManager = () => {
     setUploadProgress(10);
 
     try {
-      // Simulation de progression
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -139,7 +140,6 @@ const MediaManager = () => {
           description: "Fichier uploadé avec succès",
         });
         
-        // Réinitialiser et rafraîchir la liste
         setTimeout(() => {
           setSelectedFile(null);
           setUploadProgress(0);
@@ -183,7 +183,6 @@ const MediaManager = () => {
           description: "Fichier supprimé avec succès",
         });
         
-        // Mettre à jour la liste des médias
         setMediaFiles(mediaFiles.filter(file => file.filename !== fileToDelete.filename));
       }
     } catch (error) {
@@ -234,7 +233,6 @@ const MediaManager = () => {
         </div>
       </div>
 
-      {/* Zone d'upload */}
       <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
@@ -242,12 +240,12 @@ const MediaManager = () => {
               <input
                 type="file"
                 onChange={handleFileChange}
-                disabled={isUploading}
+                disabled={isUploading || connectionStatus === 'error'}
                 className="flex-1 p-2 border border-gray-300 rounded"
               />
               <Button 
                 onClick={handleUpload} 
-                disabled={!selectedFile || isUploading}
+                disabled={!selectedFile || isUploading || connectionStatus === 'error'}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {isUploading ? `Upload ${uploadProgress}%` : 'Upload'}
@@ -262,11 +260,20 @@ const MediaManager = () => {
                 />
               </div>
             )}
+            
+            {connectionStatus === 'error' && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erreur de connexion à Cloudinary</AlertTitle>
+                <AlertDescription>
+                  Impossible de se connecter à Cloudinary. Veuillez vérifier les clés d'API dans le fichier .env du serveur.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Liste des médias */}
       {isLoading ? (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin">
@@ -317,7 +324,15 @@ const MediaManager = () => {
               <AlertTriangle className="mx-auto h-10 w-10 text-amber-500 mb-2" />
               <h3 className="text-lg font-semibold">Impossible de se connecter à Cloudinary</h3>
               <p className="text-sm text-gray-500 mt-1">
-                Vérifiez votre configuration Cloudinary dans le fichier .env
+                Vérifiez votre configuration Cloudinary dans le fichier .env du serveur:
+              </p>
+              <ul className="list-disc pl-8 mt-2 text-sm text-gray-500 text-left max-w-md mx-auto">
+                <li>CLOUDINARY_CLOUD_NAME doit être défini avec votre nom de cloud</li>
+                <li>CLOUDINARY_API_KEY doit être défini avec votre clé API</li>
+                <li>CLOUDINARY_API_SECRET doit être défini avec votre secret API</li>
+              </ul>
+              <p className="text-sm text-gray-500 mt-4">
+                Après avoir mis à jour ces valeurs, redémarrez le serveur et rafraîchissez cette page.
               </p>
             </div>
           ) : (
@@ -328,7 +343,6 @@ const MediaManager = () => {
         </div>
       )}
 
-      {/* Dialog de confirmation de suppression */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>

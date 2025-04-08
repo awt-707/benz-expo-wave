@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 const { uploadMedia } = require('../middleware/upload');
@@ -16,7 +15,8 @@ exports.getAllMedia = async (req, res) => {
       console.error('Cloudinary connection failed:', connectionTest.error);
       return res.status(500).json({ 
         message: 'Erreur de connexion avec Cloudinary', 
-        error: connectionTest.error
+        error: connectionTest.error,
+        details: 'Vérifiez les variables CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET dans votre fichier .env'
       });
     }
     
@@ -45,7 +45,8 @@ exports.getAllMedia = async (req, res) => {
     console.error('Error fetching media files from Cloudinary:', error);
     res.status(500).json({ 
       message: 'Erreur lors de la récupération des médias',
-      error: error.message
+      error: error.message,
+      details: 'Vérifiez votre configuration Cloudinary et que votre connexion internet fonctionne correctement.'
     });
   }
 };
@@ -184,30 +185,38 @@ exports.deleteMedia = async (req, res) => {
   }
 };
 
-// Ajouter une route de test pour vérifier la configuration Cloudinary
+// Test Cloudinary connection
 exports.testCloudinary = async (req, res) => {
   try {
+    // Log env variables for debugging (don't log the secret)
+    console.log('Testing Cloudinary with cloud name:', process.env.CLOUDINARY_CLOUD_NAME);
+    console.log('API Key provided:', process.env.CLOUDINARY_API_KEY ? 'Yes' : 'No');
+    
     const testResult = await cloudinary.testConnection();
     
     if (testResult.success) {
+      console.log('Cloudinary connection test successful');
       res.status(200).json({
         status: 'success',
         message: 'Cloudinary connection successful',
         result: testResult.result
       });
     } else {
+      console.error('Cloudinary connection test failed:', testResult.error);
       res.status(500).json({
         status: 'error',
-        message: 'Cloudinary connection failed',
-        error: testResult.error
+        message: 'Erreur de connexion à Cloudinary',
+        error: testResult.error,
+        details: 'Vérifiez vos variables d\'environnement CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET'
       });
     }
   } catch (error) {
     console.error('Error testing Cloudinary connection:', error);
     res.status(500).json({
       status: 'error',
-      message: 'Cloudinary connection failed',
-      error: error.message
+      message: 'Échec du test de connexion à Cloudinary',
+      error: error.message,
+      details: 'Une erreur s\'est produite lors du test de connexion'
     });
   }
 };

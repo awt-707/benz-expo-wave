@@ -20,6 +20,7 @@ const NetworkErrorDisplay = ({ onRetry }: NetworkErrorDisplayProps) => {
             <li>Le serveur backend est en cours d'exécution</li>
             <li>L'URL du backend est correcte dans vos variables d'environnement</li>
             <li>Il n'y a pas de problèmes réseau</li>
+            <li>Les clés d'API pour Cloudinary sont correctes dans le fichier .env du serveur</li>
           </ul>
         </AlertDescription>
       </Alert>

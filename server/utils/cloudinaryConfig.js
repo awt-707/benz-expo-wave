@@ -19,12 +19,22 @@ console.log('- API Secret set:', process.env.CLOUDINARY_API_SECRET ? 'Yes' : 'No
 // Ajouter une méthode pour tester la connexion
 cloudinary.testConnection = async () => {
   try {
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary configuration missing. Please check your .env file');
+      return { success: false, error: 'Configuration Cloudinary manquante ou incomplète' };
+    }
+    
+    console.log('Testing Cloudinary connection...');
     const result = await cloudinary.api.ping();
     console.log('Cloudinary connection test successful:', result);
     return { success: true, result };
   } catch (error) {
     console.error('Cloudinary connection test failed:', error);
-    return { success: false, error: error.message || 'Unknown error' };
+    return { 
+      success: false, 
+      error: error.message || 'Unknown error',
+      details: error 
+    };
   }
 };
 
