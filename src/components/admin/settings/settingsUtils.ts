@@ -30,7 +30,6 @@ export interface SiteConfigType {
 export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> => {
   try {
     console.log('Saving site config:', config);
-    // Use configApi directly instead of adminApi
     const result = await configApi.updateConfig(config);
     
     if (result.error) {
@@ -40,7 +39,6 @@ export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> =
     
     console.log('Site config saved successfully:', result);
     
-    // Import toast directly
     const { toast } = require('@/hooks/use-toast');
     toast({
       title: "Configuration sauvegardée",
@@ -130,20 +128,16 @@ export const handleInputChange = (
   const { name, value } = e.target;
   console.log('Input change:', section, field, name, value);
   
-  // Create a deep copy to avoid references
   const newConfig = JSON.parse(JSON.stringify(config));
   
   if (section && field) {
-    // Make sure the section exists
     if (!newConfig[section]) {
       newConfig[section] = {};
     }
     
-    // Update the field
     newConfig[section][field] = value;
     console.log('Updated config section:', section, field, newConfig[section]);
   } else if (name) {
-    // Direct update if name is provided
     newConfig[name] = value;
   }
   
