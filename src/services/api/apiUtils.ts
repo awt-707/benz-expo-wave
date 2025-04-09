@@ -27,9 +27,16 @@ export const handleResponse = async (response: Response) => {
   }
   
   try {
-    const data = await response.json();
-    console.log('API response data:', data);
-    return data;
+    // Vérifier si la réponse contient du contenu
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('API response data:', data);
+      return data;
+    } else {
+      console.log('API response has no JSON content, returning success object');
+      return { success: true, status: response.status };
+    }
   } catch (parseError) {
     console.error('Error parsing API success response:', parseError);
     

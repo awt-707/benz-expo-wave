@@ -104,23 +104,23 @@ export const adminApi = {
   uploadVideo: async (videoFile: File) => {
     try {
       console.log('Uploading video:', videoFile.name, videoFile.size);
-      const token = localStorage.getItem('adminToken');
+      const headers = getAuthHeaders();
       
-      if (!token) {
-        return { error: true, message: 'Authentication required' };
-      }
+      // Supprimer le Content-Type pour FormData
+      delete headers['Content-Type'];
       
       const formData = new FormData();
       formData.append('video', videoFile);
       
+      console.log('Upload video headers:', headers);
+      
       const response = await fetch(`${API_BASE_URL}/admin/upload-video`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: headers,
         body: formData,
       });
       
+      console.log('Video upload response status:', response.status);
       return handleResponse(response);
     } catch (error) {
       console.error('Error uploading video:', error);

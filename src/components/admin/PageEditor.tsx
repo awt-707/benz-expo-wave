@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { adminApi } from '@/services/api';
-import { Loader2, Save, Eye } from 'lucide-react';
+import { Loader2, Save, Eye, AlertTriangle } from 'lucide-react';
 import { SiteConfigType } from './settings/settingsUtils';
 
 interface PageData {
@@ -27,6 +28,7 @@ const PageEditor = () => {
   const [preview, setPreview] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Définition des pages disponibles
@@ -41,13 +43,15 @@ const PageEditor = () => {
     const fetchConfig = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        console.log('Fetching site config for PageEditor');
         const data = await adminApi.getSiteConfig();
         
         if (data.error) {
           throw new Error(data.message || 'Erreur lors de la récupération de la configuration');
         }
         
-        console.log('Received site config:', data);
+        console.log('Received site config for PageEditor:', data);
         setConfig(data);
         
         // Initialiser la liste des pages
@@ -64,6 +68,7 @@ const PageEditor = () => {
           });
         });
         
+        console.log('Initialized pages data:', pagesData);
         setPages(pagesData);
         
         // Initialiser avec la première page
@@ -73,9 +78,11 @@ const PageEditor = () => {
           setPageTitle(firstPage.title);
           setPageContent(firstPage.content);
           setPreview(firstPage.content);
+          console.log('Selected initial page:', firstPage);
         }
       } catch (error) {
         console.error('Error fetching site config:', error);
+        setError('Impossible de récupérer les données des pages. Veuillez rafraîchir la page et réessayer.');
         toast({
           title: "Erreur",
           description: "Impossible de récupérer les données des pages",
@@ -92,6 +99,7 @@ const PageEditor = () => {
   const handlePageSelect = (pageKey: string) => {
     const page = pages.find(p => p.key === pageKey);
     if (page) {
+      console.log('Selected page:', page);
       setSelectedPage(page.key);
       setPageTitle(page.title);
       setPageContent(page.content);
@@ -114,8 +122,10 @@ const PageEditor = () => {
     }
 
     setIsSaving(true);
+    setError(null);
     
     try {
+      console.log('Saving page data:', { key: selectedPage, title: pageTitle, content: pageContent });
       const result = await adminApi.saveCustomPage(selectedPage, {
         title: pageTitle,
         content: pageContent
@@ -124,6 +134,8 @@ const PageEditor = () => {
       if (result.error) {
         throw new Error(result.message || 'Erreur lors de la sauvegarde de la page');
       }
+      
+      console.log('Save custom page response:', result);
       
       // Mettre à jour l'état local
       const updatedPages = pages.map(page => 
@@ -135,12 +147,29 @@ const PageEditor = () => {
       setPages(updatedPages);
       setPreview(pageContent);
       
+      // Mettre à jour également la configuration localement
+      if (config) {
+        const updatedConfig = {
+          ...config,
+          customPages: {
+            ...(config.customPages || {}),
+            [selectedPage]: {
+              title: pageTitle,
+              content: pageContent,
+              lastUpdated: new Date().toISOString()
+            }
+          }
+        };
+        setConfig(updatedConfig);
+      }
+      
       toast({
         title: "Succès",
         description: "La page a été enregistrée avec succès",
       });
     } catch (error) {
       console.error('Error saving page:', error);
+      setError('Impossible de sauvegarder la page. Veuillez réessayer.');
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder la page: " + (error instanceof Error ? error.message : "erreur inconnue"),
@@ -172,6 +201,14 @@ const PageEditor = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Éditeur de pages</h1>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erreur</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <div className="flex flex-col gap-6">
         <Card>
