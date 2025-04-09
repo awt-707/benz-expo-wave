@@ -1,6 +1,5 @@
 
-import { useToast } from '@/hooks/use-toast';
-import { adminApi } from '@/services/api';
+import { configApi } from '@/services/api';
 
 export interface SiteConfigType {
   homeHeroText: string;
@@ -32,15 +31,17 @@ export interface SiteConfigType {
 export const saveSiteConfig = async (config: SiteConfigType): Promise<boolean> => {
   try {
     console.log('Saving site config:', config);
-    const result = await adminApi.updateSiteConfig(config);
+    // Use configApi directly instead of adminApi
+    const result = await configApi.updateConfig(config);
     
     if (result.error) {
+      console.error('Error response received:', result);
       throw new Error(result.message || 'Erreur lors de la sauvegarde de la configuration');
     }
     
     console.log('Site config saved successfully:', result);
     
-    // Import toast directement plutôt que d'utiliser useToast() dans une fonction non-composant
+    // Import toast directly
     const { toast } = require('@/hooks/use-toast');
     toast({
       title: "Configuration sauvegardée",
@@ -130,21 +131,23 @@ export const handleInputChange = (
   const { name, value } = e.target;
   console.log('Input change:', section, field, name, value);
   
-  // Créer une copie profonde pour éviter les références
+  // Create a deep copy to avoid references
   const newConfig = JSON.parse(JSON.stringify(config));
   
   if (section && field) {
-    // Assurons-nous que la section existe
+    // Make sure the section exists
     if (!newConfig[section]) {
       newConfig[section] = {};
     }
     
-    // Mettre à jour le champ
+    // Update the field
     newConfig[section][field] = value;
+    console.log('Updated config section:', section, field, newConfig[section]);
   } else if (name) {
-    // Mise à jour directe si name est fourni
+    // Direct update if name is provided
     newConfig[name] = value;
   }
   
+  console.log('Returning updated config:', newConfig);
   return newConfig;
 };
