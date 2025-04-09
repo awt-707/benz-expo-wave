@@ -1,5 +1,4 @@
-
-import { configApi } from '@/services/api';
+import { configApi, adminApi } from '@/services/api';
 
 export interface SiteConfigType {
   homeHeroText: string;
