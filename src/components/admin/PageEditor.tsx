@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { API_BASE_URL } from '@/services/api';
-import { SiteConfigType, saveCustomPage } from './settings/settingsUtils';
+import { adminApi } from '@/services/api';
+import { Loader2, Save, Eye } from 'lucide-react';
+import { SiteConfigType } from './settings/settingsUtils';
 
 interface PageData {
   key: string;
@@ -39,18 +40,14 @@ const PageEditor = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        setIsLoading(true);
+        const data = await adminApi.getSiteConfig();
         
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération de la configuration');
+        if (data.error) {
+          throw new Error(data.message || 'Erreur lors de la récupération de la configuration');
         }
         
-        const data = await response.json();
+        console.log('Received site config:', data);
         setConfig(data);
         
         // Initialiser la liste des pages
@@ -78,6 +75,7 @@ const PageEditor = () => {
           setPreview(firstPage.content);
         }
       } catch (error) {
+        console.error('Error fetching site config:', error);
         toast({
           title: "Erreur",
           description: "Impossible de récupérer les données des pages",
@@ -118,27 +116,36 @@ const PageEditor = () => {
     setIsSaving(true);
     
     try {
-      const success = await saveCustomPage(selectedPage, {
+      const result = await adminApi.saveCustomPage(selectedPage, {
         title: pageTitle,
         content: pageContent
       });
       
-      if (success) {
-        // Mettre à jour l'état local
-        const updatedPages = pages.map(page => 
-          page.key === selectedPage 
-            ? { ...page, title: pageTitle, content: pageContent, lastUpdated: new Date().toISOString() }
-            : page
-        );
-        
-        setPages(updatedPages);
-        setPreview(pageContent);
-        
-        toast({
-          title: "Succès",
-          description: "La page a été enregistrée avec succès",
-        });
+      if (result.error) {
+        throw new Error(result.message || 'Erreur lors de la sauvegarde de la page');
       }
+      
+      // Mettre à jour l'état local
+      const updatedPages = pages.map(page => 
+        page.key === selectedPage 
+          ? { ...page, title: pageTitle, content: pageContent, lastUpdated: new Date().toISOString() }
+          : page
+      );
+      
+      setPages(updatedPages);
+      setPreview(pageContent);
+      
+      toast({
+        title: "Succès",
+        description: "La page a été enregistrée avec succès",
+      });
+    } catch (error) {
+      console.error('Error saving page:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder la page: " + (error instanceof Error ? error.message : "erreur inconnue"),
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -149,7 +156,7 @@ const PageEditor = () => {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Éditeur de pages</h1>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -192,7 +199,10 @@ const PageEditor = () => {
         <Tabs defaultValue="edit">
           <TabsList className="w-full mb-4">
             <TabsTrigger value="edit" className="flex-1">Éditer</TabsTrigger>
-            <TabsTrigger value="preview" className="flex-1" onClick={handlePreview}>Aperçu</TabsTrigger>
+            <TabsTrigger value="preview" className="flex-1" onClick={handlePreview}>
+              <Eye className="mr-2 h-4 w-4" />
+              Aperçu
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="edit">
@@ -228,14 +238,23 @@ const PageEditor = () => {
                       className="font-mono text-sm"
                     />
                   </div>
-                  
-                  <div className="flex justify-end">
-                    <Button onClick={handleSave} disabled={isSaving}>
-                      {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
+              <CardFooter>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Enregistrer
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
             </Card>
           </TabsContent>
           

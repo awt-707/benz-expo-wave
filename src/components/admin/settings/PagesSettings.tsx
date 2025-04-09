@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { 
   Select, 
   SelectContent, 
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Loader2, Save } from 'lucide-react';
 import { SiteConfigType, saveCustomPage } from './settingsUtils';
 
 interface PagesSettingsProps {
@@ -35,7 +36,10 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ config, onConfigUp
 
   const handlePageChange = (pageId: string) => {
     setSelectedPage(pageId);
-    
+    loadPageContent(pageId);
+  };
+
+  const loadPageContent = (pageId: string) => {
     // Charger le contenu de la page sélectionnée
     const customPages = config.customPages || {};
     const page = customPages[pageId];
@@ -51,6 +55,10 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ config, onConfigUp
   };
 
   const handleSave = async () => {
+    if (!pageTitle.trim()) {
+      return; // Empêcher la sauvegarde si le titre est vide
+    }
+    
     setIsSaving(true);
     
     try {
@@ -79,59 +87,69 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ config, onConfigUp
   };
 
   // Initialiser le contenu au chargement initial
-  React.useEffect(() => {
-    handlePageChange(selectedPage);
+  useEffect(() => {
+    loadPageContent(selectedPage);
   }, [config.customPages]);
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="pageName">Sélectionner une page</Label>
-            <Select value={selectedPage} onValueChange={handlePageChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une page" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePages.map(page => (
-                  <SelectItem key={page.id} value={page.id}>
-                    {page.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="pageTitle">Titre de la page</Label>
-            <Input
-              id="pageTitle"
-              value={pageTitle}
-              onChange={(e) => setPageTitle(e.target.value)}
-              placeholder="Titre de la page"
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="pageContent">Contenu</Label>
-            <Textarea
-              id="pageContent"
-              value={pageContent}
-              onChange={(e) => setPageContent(e.target.value)}
-              rows={10}
-              placeholder="Contenu de la page (HTML supporté)"
-              className="font-mono text-sm"
-            />
-          </div>
-          
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? 'Enregistrement...' : 'Enregistrer'}
-            </Button>
-          </div>
+      <CardHeader>
+        <CardTitle>Gestion des pages personnalisées</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-1">
+          <Label htmlFor="pageName">Sélectionner une page</Label>
+          <Select value={selectedPage} onValueChange={handlePageChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une page" />
+            </SelectTrigger>
+            <SelectContent>
+              {availablePages.map(page => (
+                <SelectItem key={page.id} value={page.id}>
+                  {page.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-1">
+          <Label htmlFor="pageTitle">Titre de la page</Label>
+          <Input
+            id="pageTitle"
+            value={pageTitle}
+            onChange={(e) => setPageTitle(e.target.value)}
+            placeholder="Titre de la page"
+          />
+        </div>
+        
+        <div className="space-y-1">
+          <Label htmlFor="pageContent">Contenu</Label>
+          <Textarea
+            id="pageContent"
+            value={pageContent}
+            onChange={(e) => setPageContent(e.target.value)}
+            rows={10}
+            placeholder="Contenu de la page (HTML supporté)"
+            className="font-mono text-sm"
+          />
         </div>
       </CardContent>
+      <CardFooter>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Enregistrer
+            </>
+          )}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

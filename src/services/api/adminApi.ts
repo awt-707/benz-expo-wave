@@ -40,7 +40,10 @@ export const adminApi = {
       console.log('Updating site configuration:', config);
       const response = await fetch(`${API_BASE_URL}/admin/site-config`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(config),
       });
       return handleResponse(response);
@@ -84,7 +87,10 @@ export const adminApi = {
       console.log('Saving custom page:', pageKey, pageData);
       const response = await fetch(`${API_BASE_URL}/admin/custom-page/${pageKey}`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(pageData),
       });
       return handleResponse(response);

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { SiteConfigType, saveSiteConfig, uploadVideo } from './settingsUtils';
 
 interface VideoSettingsProps {
@@ -55,7 +55,7 @@ export const VideoSettings: React.FC<VideoSettingsProps> = ({ config, onConfigUp
         } else {
           throw new Error("Erreur lors de l'upload de la vidéo");
         }
-      } else {
+      } else if (config.videoUrl) {
         // Save config without changing video
         const success = await saveSiteConfig(config);
         
@@ -67,11 +67,16 @@ export const VideoSettings: React.FC<VideoSettingsProps> = ({ config, onConfigUp
         } else {
           throw new Error("Erreur lors de la sauvegarde");
         }
+      } else {
+        toast({
+          title: "Information",
+          description: "Veuillez sélectionner une vidéo à télécharger",
+        });
       }
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Impossible de sauvegarder les modifications",
+        description: "Impossible de sauvegarder les modifications: " + (error instanceof Error ? error.message : "erreur inconnue"),
         variant: "destructive",
       });
     } finally {
@@ -93,8 +98,9 @@ export const VideoSettings: React.FC<VideoSettingsProps> = ({ config, onConfigUp
             <video
               controls
               className="w-full aspect-video"
-              src={`${import.meta.env.VITE_API_URL}${config.videoUrl}`}
+              src={config.videoUrl}
             />
+            <p className="text-sm text-slate-500 mt-2">URL actuelle: {config.videoUrl}</p>
           </div>
         )}
         
@@ -114,10 +120,19 @@ export const VideoSettings: React.FC<VideoSettingsProps> = ({ config, onConfigUp
       <CardFooter>
         <Button 
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving && !videoFile}
         >
-          <Upload className="mr-2 h-4 w-4" />
-          {isSaving ? "Téléchargement en cours..." : "Télécharger et sauvegarder"}
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Téléchargement en cours...
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              Télécharger et sauvegarder
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
