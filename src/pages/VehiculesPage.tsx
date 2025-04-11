@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -51,10 +52,25 @@ const VehiculesPage = () => {
       setError(null);
       const data = await vehiclesApi.getAll();
       console.log('Fetched vehicles from API:', data);
-      setVehicles(data);
+      
+      // Check if data is an error object
+      if (data && data.error) {
+        throw new Error(data.message || 'Erreur lors du chargement des véhicules');
+      }
+      
+      // Make sure we're setting an array to our state
+      if (Array.isArray(data)) {
+        setVehicles(data);
+      } else {
+        console.error('API did not return an array:', data);
+        setVehicles([]);
+        throw new Error('Format de données invalide');
+      }
     } catch (error: any) {
       console.error('Error fetching vehicles:', error);
       setError(error.message || 'Erreur lors du chargement des véhicules');
+      // Ensure vehicles is always an array even on error
+      setVehicles([]);
     } finally {
       setIsLoading(false);
     }
@@ -64,22 +80,29 @@ const VehiculesPage = () => {
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<FuelType[]>([]);
   const [yearRange, setYearRange] = useState([2021, 2025]);
   
-  const availableFuelTypes = Array.from(
-    new Set(vehicles.map(v => v.specifications?.fuelType).filter(Boolean))
-  );
+  // Safely get fuel types, ensuring vehicles is an array
+  const availableFuelTypes = Array.isArray(vehicles)
+    ? Array.from(
+        new Set(vehicles.map(v => v.specifications?.fuelType).filter(Boolean))
+      )
+    : [];
   
-  const filteredVehicles = vehicles.filter(vehicle => {
-    const fuelTypeMatch = selectedFuelTypes.length === 0 || 
-      (vehicle.specifications?.fuelType && 
-       selectedFuelTypes.includes(vehicle.specifications.fuelType));
-    
-    const vehicleYear = vehicle.year;
-    const yearMatch = vehicleYear >= yearRange[0] && vehicleYear <= yearRange[1];
-    
-    return fuelTypeMatch && yearMatch;
-  });
+  const filteredVehicles = Array.isArray(vehicles)
+    ? vehicles.filter(vehicle => {
+        const fuelTypeMatch = selectedFuelTypes.length === 0 || 
+          (vehicle.specifications?.fuelType && 
+           selectedFuelTypes.includes(vehicle.specifications.fuelType));
+        
+        const vehicleYear = vehicle.year;
+        const yearMatch = vehicleYear >= yearRange[0] && vehicleYear <= yearRange[1];
+        
+        return fuelTypeMatch && yearMatch;
+      })
+    : [];
 
-  const availableCount = filteredVehicles.filter(v => v.status === 'available').length;
+  const availableCount = Array.isArray(filteredVehicles)
+    ? filteredVehicles.filter(v => v.status === 'available').length
+    : 0;
 
   const toggleFuelType = (fuelType: FuelType) => {
     setSelectedFuelTypes(prev => 
@@ -89,15 +112,19 @@ const VehiculesPage = () => {
     );
   };
 
-  const yearsArray = vehicles.map(v => v.year).filter(Boolean);
+  // Safely get year range, ensuring vehicles is an array
+  const yearsArray = Array.isArray(vehicles)
+    ? vehicles.map(v => v.year).filter(Boolean)
+    : [];
+    
   const minYear = yearsArray.length ? Math.min(...yearsArray) : 2021;
   const maxYear = yearsArray.length ? Math.max(...yearsArray) : 2025;
 
   useEffect(() => {
-    if (vehicles.length && yearsArray.length) {
+    if (Array.isArray(vehicles) && vehicles.length && yearsArray.length) {
       setYearRange([minYear, maxYear]);
     }
-  }, [vehicles]);
+  }, [vehicles, minYear, maxYear]);
 
   const getAvailabilityText = (status: string) => {
     switch (status) {
@@ -251,11 +278,11 @@ const VehiculesPage = () => {
                   ) : (
                     <div className="col-span-full py-12 text-center">
                       <p className="text-lg text-gray-500">
-                        {vehicles.length > 0 
+                        {Array.isArray(vehicles) && vehicles.length > 0 
                           ? 'Aucun véhicule ne correspond à vos critères de recherche.'
                           : 'Aucun véhicule disponible pour le moment.'}
                       </p>
-                      {vehicles.length > 0 && (
+                      {Array.isArray(vehicles) && vehicles.length > 0 && (
                         <button 
                           onClick={() => {
                             setSelectedFuelTypes([]);
