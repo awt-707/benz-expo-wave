@@ -1,3 +1,4 @@
+
 import { configApi, adminApi } from '@/services/api';
 
 export interface SiteConfigType {

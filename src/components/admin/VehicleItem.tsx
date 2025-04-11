@@ -5,6 +5,7 @@ import { Car, Pencil, Trash, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { API_BASE_URL } from '@/services/api/apiUtils';
 
 interface Vehicle {
   _id: string;
@@ -68,12 +69,19 @@ const VehicleItem: React.FC<VehicleItemProps> = ({ vehicle, onDelete }) => {
     maximumFractionDigits: 0
   }) || 'N/A';
   
+  // Fix pour l'affichage des images avec chemin correct
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '/placeholder-car.png';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${API_BASE_URL}${imagePath}`;
+  };
+  
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="aspect-video relative overflow-hidden bg-gray-100">
         {images && images.length > 0 ? (
           <img 
-            src={images[0].startsWith('http') ? images[0] : `${import.meta.env.VITE_API_URL}${images[0]}`}
+            src={getImageUrl(images[0])}
             alt={`${make} ${model}`}
             className="w-full h-full object-cover"
             onError={(e) => {

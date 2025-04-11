@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -18,6 +17,7 @@ import { Calendar, Car, Euro, Fuel, Gauge, Info, Share2, ShieldCheck, ChevronLef
 import ScrollReveal from "@/components/ScrollReveal";
 import { useToast } from "@/hooks/use-toast";
 import { vehiclesApi } from "@/services/api";
+import { API_BASE_URL } from "@/services/api/apiUtils";
 
 interface VehicleSpecs {
   engine: string;
@@ -51,7 +51,6 @@ const VehicleDetailsPage = () => {
   const { toast } = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Fonction pour passer à l'image suivante
   const nextImage = () => {
     if (!vehicle || !vehicle.images || vehicle.images.length <= 1) return;
     setCurrentImageIndex((prevIndex) => 
@@ -59,7 +58,6 @@ const VehicleDetailsPage = () => {
     );
   };
   
-  // Fonction pour passer à l'image précédente
   const prevImage = () => {
     if (!vehicle || !vehicle.images || vehicle.images.length <= 1) return;
     setCurrentImageIndex((prevIndex) => 
@@ -67,7 +65,6 @@ const VehicleDetailsPage = () => {
     );
   };
 
-  // Fonction pour aller à une image spécifique
   const goToImage = (index: number) => {
     if (!vehicle || !vehicle.images || index >= vehicle.images.length) return;
     setCurrentImageIndex(index);
@@ -104,11 +101,10 @@ const VehicleDetailsPage = () => {
     fetchVehicleDetails();
   }, [id]);
   
-  // Helper to get API URL for images
   const getImageUrl = (imagePath: string) => {
     if (!imagePath) return '/placeholder.svg';
     if (imagePath.startsWith('http')) return imagePath;
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${imagePath}`;
+    return `${API_BASE_URL}${imagePath}`;
   };
   
   if (isLoading) {
@@ -229,9 +225,8 @@ const VehicleDetailsPage = () => {
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="lg:w-3/5">
                 <ScrollReveal>
-                  {vehicle.images && vehicle.images.length > 0 ? (
+                  {vehicle?.images && vehicle.images.length > 0 ? (
                     <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-                      {/* Image carousel */}
                       <div className="aspect-w-16 aspect-h-9 relative">
                         <img 
                           src={getImageUrl(vehicle.images[currentImageIndex])} 
@@ -239,18 +234,17 @@ const VehicleDetailsPage = () => {
                           className="w-full h-full object-cover"
                         />
                         
-                        {/* Navigation buttons */}
                         {vehicle.images.length > 1 && (
                           <>
                             <button 
-                              onClick={prevImage} 
+                              onClick={() => prevImage()} 
                               className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-mercedes-blue/80 text-white p-2 rounded-full"
                               aria-label="Image précédente"
                             >
                               <ChevronLeft className="h-6 w-6" />
                             </button>
                             <button 
-                              onClick={nextImage} 
+                              onClick={() => nextImage()} 
                               className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-mercedes-blue/80 text-white p-2 rounded-full"
                               aria-label="Image suivante"
                             >
@@ -260,7 +254,6 @@ const VehicleDetailsPage = () => {
                         )}
                       </div>
                       
-                      {/* Image indicators */}
                       {vehicle.images.length > 1 && (
                         <div className="flex justify-center mt-4 gap-2 pb-2">
                           {vehicle.images.map((_, index) => (
@@ -276,7 +269,6 @@ const VehicleDetailsPage = () => {
                         </div>
                       )}
                       
-                      {/* Image counter */}
                       {vehicle.images.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black/50 text-white text-sm px-2 py-1 rounded">
                           {currentImageIndex + 1} / {vehicle.images.length}

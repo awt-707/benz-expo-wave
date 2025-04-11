@@ -34,7 +34,7 @@ const AdminPage = () => {
       <div className="flex min-h-screen w-full">
         <Sidebar>
           <SidebarHeader className="flex items-center px-4 py-2">
-            <span className="text-xl font-semibold">3ansdz Admin</span>
+            <span className="text-xl font-semibold">Dzauto Admin</span>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>

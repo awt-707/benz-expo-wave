@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Filter, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { vehiclesApi } from "@/services/api";
+import { getImageUrl } from "@/utils/imageUtils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Vehicle {
@@ -64,26 +64,21 @@ const VehiculesPage = () => {
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<FuelType[]>([]);
   const [yearRange, setYearRange] = useState([2021, 2025]);
   
-  // Get unique fuel types from vehicles
   const availableFuelTypes = Array.from(
     new Set(vehicles.map(v => v.specifications?.fuelType).filter(Boolean))
   );
   
-  // Filter vehicles based on selected criteria
   const filteredVehicles = vehicles.filter(vehicle => {
-    // Filter by fuel type if any is selected
     const fuelTypeMatch = selectedFuelTypes.length === 0 || 
       (vehicle.specifications?.fuelType && 
        selectedFuelTypes.includes(vehicle.specifications.fuelType));
     
-    // Filter by year range
     const vehicleYear = vehicle.year;
     const yearMatch = vehicleYear >= yearRange[0] && vehicleYear <= yearRange[1];
     
     return fuelTypeMatch && yearMatch;
   });
 
-  // Count available vehicles after filtering
   const availableCount = filteredVehicles.filter(v => v.status === 'available').length;
 
   const toggleFuelType = (fuelType: FuelType) => {
@@ -94,19 +89,16 @@ const VehiculesPage = () => {
     );
   };
 
-  // Calculate min and max years from available vehicles
   const yearsArray = vehicles.map(v => v.year).filter(Boolean);
   const minYear = yearsArray.length ? Math.min(...yearsArray) : 2021;
   const maxYear = yearsArray.length ? Math.max(...yearsArray) : 2025;
 
-  // Set year range when vehicles load
   useEffect(() => {
     if (vehicles.length && yearsArray.length) {
       setYearRange([minYear, maxYear]);
     }
   }, [vehicles]);
 
-  // Map status to display text
   const getAvailabilityText = (status: string) => {
     switch (status) {
       case 'available':
@@ -118,13 +110,6 @@ const VehiculesPage = () => {
       default:
         return status;
     }
-  };
-
-  // Helper to get API URL for images
-  const getImageUrl = (imagePath: string) => {
-    if (!imagePath) return '/placeholder.svg';
-    if (imagePath.startsWith('http')) return imagePath;
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}${imagePath}`;
   };
 
   return (
