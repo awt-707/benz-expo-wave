@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import ImageUploader from '../ImageUploader';
+import ImageUploader from '@/components/admin/ImageUploader';
 
 interface VehicleImagesSectionProps {
   vehicleId: string;
@@ -9,12 +9,14 @@ interface VehicleImagesSectionProps {
   onUpload: (files: File[]) => void;
 }
 
-const VehicleImagesSection: React.FC<VehicleImagesSectionProps> = ({ vehicleId, images, onUpload }) => {
-  if (!vehicleId) return null;
-  
+const VehicleImagesSection: React.FC<VehicleImagesSectionProps> = ({
+  vehicleId,
+  images,
+  onUpload
+}) => {
   return (
     <div className="space-y-4">
-      <Label>Images du véhicule</Label>
+      <Label htmlFor="images">Images du véhicule</Label>
       <ImageUploader 
         existingImages={images}
         onUpload={onUpload}

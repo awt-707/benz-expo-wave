@@ -3,21 +3,31 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { vehiclesApi } from '@/services/api';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-interface VehicleFormValues {
-  title: string;
-  make: string;
-  model: string;
-  year: number;
-  price: number;
-  mileage: number;
-  fuelType: string;
-  transmission: string;
-  description: string;
-  features: string;
-  isFeatured: boolean;
-  status: string;
-}
+// Define a validation schema with Zod
+const vehicleFormSchema = z.object({
+  title: z.string().min(3, "Le titre doit comporter au moins 3 caractères"),
+  make: z.string().min(1, "La marque est requise"),
+  model: z.string().min(1, "Le modèle est requis"),
+  year: z.number()
+    .int("L'année doit être un nombre entier")
+    .min(1900, "L'année doit être valide")
+    .max(new Date().getFullYear() + 1, "L'année ne peut pas être future"),
+  price: z.number()
+    .min(0, "Le prix doit être positif"),
+  mileage: z.number()
+    .min(0, "Le kilométrage doit être positif"),
+  fuelType: z.string().min(1, "Le type de carburant est requis"),
+  transmission: z.string().min(1, "La transmission est requise"),
+  description: z.string().min(10, "La description doit comporter au moins 10 caractères"),
+  features: z.string(),
+  isFeatured: z.boolean(),
+  status: z.string()
+});
+
+export type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
 
 interface UseVehicleFormProps {
   vehicleId?: string;
@@ -29,7 +39,9 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
   const [images, setImages] = useState<string[]>([]);
   const { toast } = useToast();
   
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<VehicleFormValues>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isValid, isDirty } } = useForm<VehicleFormValues>({
+    resolver: zodResolver(vehicleFormSchema),
+    mode: "onBlur", // Validate on blur for better user experience
     defaultValues: {
       title: '',
       make: '',
@@ -192,6 +204,8 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
     reset,
     errors,
     isLoading,
+    isValid,
+    isDirty,
     images,
     handleImageUpload
   };

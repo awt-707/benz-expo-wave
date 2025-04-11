@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
 import { useVehicleForm } from '@/hooks/useVehicleForm';
 
 // Import sub-components
@@ -18,60 +19,47 @@ interface VehicleFormProps {
 
 const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
   const {
-    register,
     handleSubmit,
     onSubmit,
-    setValue,
-    watch,
     reset,
-    errors,
     isLoading,
+    isValid,
+    isDirty,
     images,
-    handleImageUpload
+    handleImageUpload,
+    ...form
   } = useVehicleForm({ vehicleId, onSuccess });
   
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <VehicleBasicInfoFields 
-              register={register} 
-              errors={errors} 
-            />
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <VehicleBasicInfoFields form={form} />
+              <VehicleSpecsFields form={form} />
+              <VehicleStatusFields form={form} />
+            </div>
             
-            <VehicleSpecsFields 
-              register={register} 
-              errors={errors} 
-              watch={watch} 
-              setValue={setValue} 
-            />
+            <VehicleDescriptionFields form={form} />
             
-            <VehicleStatusFields 
-              watch={watch} 
-              setValue={setValue} 
-            />
-          </div>
-          
-          <VehicleDescriptionFields 
-            register={register} 
-            errors={errors} 
-          />
-          
-          {vehicleId && (
-            <VehicleImagesSection
+            {vehicleId && (
+              <VehicleImagesSection
+                vehicleId={vehicleId}
+                images={images}
+                onUpload={handleImageUpload}
+              />
+            )}
+            
+            <VehicleFormActions 
+              isLoading={isLoading}
+              onReset={reset}
               vehicleId={vehicleId}
-              images={images}
-              onUpload={handleImageUpload}
+              isValid={isValid}
+              isDirty={isDirty}
             />
-          )}
-          
-          <VehicleFormActions 
-            isLoading={isLoading} 
-            onReset={reset}
-            vehicleId={vehicleId} 
-          />
-        </form>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

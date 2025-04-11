@@ -1,41 +1,56 @@
 
 import React from 'react';
-import { Label } from '@/components/ui/label';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { UseFormReturn } from 'react-hook-form';
+import { VehicleFormValues } from '@/hooks/useVehicleForm';
 
 interface VehicleDescriptionFieldsProps {
-  register: any;
-  errors: any;
+  form: UseFormReturn<VehicleFormValues>;
 }
 
-const VehicleDescriptionFields: React.FC<VehicleDescriptionFieldsProps> = ({ register, errors }) => {
+const VehicleDescriptionFields: React.FC<VehicleDescriptionFieldsProps> = ({ form }) => {
+  const { control } = form;
+
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          {...register('description', { required: "La description est requise" })}
-          placeholder="Description détaillée du véhicule"
-          rows={6}
-        />
-        {errors.description && (
-          <p className="text-sm text-red-500">{errors.description.message}</p>
+      <FormField
+        control={control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="description">Description</FormLabel>
+            <FormControl>
+              <Textarea
+                id="description"
+                placeholder="Description détaillée du véhicule"
+                rows={6}
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="features">Caractéristiques (séparées par des virgules)</Label>
-        <Textarea
-          id="features"
-          {...register('features')}
-          placeholder="Climatisation, GPS, Bluetooth, etc."
-          rows={3}
-        />
-        {errors.features && (
-          <p className="text-sm text-red-500">{errors.features.message}</p>
+      <FormField
+        control={control}
+        name="features"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="features">Caractéristiques (séparées par des virgules)</FormLabel>
+            <FormControl>
+              <Textarea
+                id="features"
+                placeholder="Climatisation, GPS, Bluetooth, etc."
+                rows={3}
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
     </>
   );
 };

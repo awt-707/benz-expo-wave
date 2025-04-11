@@ -2,66 +2,92 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { UseFormReturn } from 'react-hook-form';
+import { VehicleFormValues } from '@/hooks/useVehicleForm';
 
 interface VehicleBasicInfoFieldsProps {
-  register: any;
-  errors: any;
+  form: UseFormReturn<VehicleFormValues>;
 }
 
-const VehicleBasicInfoFields: React.FC<VehicleBasicInfoFieldsProps> = ({ register, errors }) => {
+const VehicleBasicInfoFields: React.FC<VehicleBasicInfoFieldsProps> = ({ form }) => {
+  const { control } = form;
+
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="title">Titre de l'annonce</Label>
-        <Input
-          id="title"
-          {...register('title', { required: "Le titre est requis" })}
-          placeholder="Titre de l'annonce"
-        />
-        {errors.title && (
-          <p className="text-sm text-red-500">{errors.title.message}</p>
+      <FormField
+        control={control}
+        name="title"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="title">Titre de l'annonce</FormLabel>
+            <FormControl>
+              <Input
+                id="title"
+                placeholder="Titre de l'annonce"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="price">Prix (€)</Label>
-        <Input
-          id="price"
-          type="number"
-          {...register('price', { 
-            required: "Le prix est requis",
-            min: { value: 0, message: "Le prix doit être positif" }
-          })}
-          placeholder="Prix"
-        />
-        {errors.price && (
-          <p className="text-sm text-red-500">{errors.price.message}</p>
+      <FormField
+        control={control}
+        name="price"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="price">Prix (€)</FormLabel>
+            <FormControl>
+              <Input
+                id="price"
+                type="number"
+                placeholder="Prix"
+                {...field}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="make">Marque</Label>
-        <Input
-          id="make"
-          {...register('make', { required: "La marque est requise" })}
-          placeholder="Marque"
-        />
-        {errors.make && (
-          <p className="text-sm text-red-500">{errors.make.message}</p>
+      <FormField
+        control={control}
+        name="make"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="make">Marque</FormLabel>
+            <FormControl>
+              <Input
+                id="make"
+                placeholder="Marque"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="model">Modèle</Label>
-        <Input
-          id="model"
-          {...register('model', { required: "Le modèle est requis" })}
-          placeholder="Modèle"
-        />
-        {errors.model && (
-          <p className="text-sm text-red-500">{errors.model.message}</p>
+      <FormField
+        control={control}
+        name="model"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel htmlFor="model">Modèle</FormLabel>
+            <FormControl>
+              <Input
+                id="model"
+                placeholder="Modèle"
+                {...field}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
     </>
   );
 };
