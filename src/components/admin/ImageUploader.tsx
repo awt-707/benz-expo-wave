@@ -19,6 +19,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 }) => {
   const [dragging, setDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -68,10 +69,18 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
+    // Generate preview URLs for the selected files
+    const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
+    
     setSelectedFiles(prev => [...prev, ...imageFiles]);
+    setPreviews(prev => [...prev, ...newPreviews]);
   };
 
   const removeSelectedFile = (index: number) => {
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(previews[index]);
+    
+    setPreviews(prev => prev.filter((_, i) => i !== index));
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -85,8 +94,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
 
     onUpload(selectedFiles);
+    
+    // Clean up preview URLs to avoid memory leaks
+    previews.forEach(preview => URL.revokeObjectURL(preview));
+    setPreviews([]);
     setSelectedFiles([]);
   };
+
+  // Clean up preview URLs when component unmounts
+  React.useEffect(() => {
+    return () => {
+      previews.forEach(preview => URL.revokeObjectURL(preview));
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -147,20 +167,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Images sélectionnées ({selectedFiles.length})</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {selectedFiles.map((file, index) => (
+            {previews.map((preview, index) => (
               <div key={index} className="relative group">
-                <img 
-                  src={URL.createObjectURL(file)} 
-                  alt={`Selected ${index + 1}`} 
-                  className="h-24 w-full object-cover rounded-md border" 
-                />
-                <button 
-                  type="button"
-                  onClick={() => removeSelectedFile(index)} 
-                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                <div className="relative h-24 w-full rounded-md border overflow-hidden">
+                  <img 
+                    src={preview} 
+                    alt={`Preview ${index + 1}`} 
+                    className="h-full w-full object-cover" 
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button 
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => removeSelectedFile(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs truncate mt-1">{selectedFiles[index].name}</p>
               </div>
             ))}
           </div>
