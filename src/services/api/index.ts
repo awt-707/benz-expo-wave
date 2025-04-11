@@ -8,4 +8,4 @@ export { configApi } from './configApi';
 export { mediaApi } from './mediaApi';
 
 // Export the API base URL for components that need it directly
-export { API_BASE_URL } from './apiUtils';
+export { API_BASE_URL, getAuthHeaders, handleResponse, handleApiError, fetchWithRetry } from './apiUtils';

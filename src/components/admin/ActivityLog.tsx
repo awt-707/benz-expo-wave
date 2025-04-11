@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL, adminApi } from '@/services/api';
+import { adminApi } from '@/services/api';
+import { API_BASE_URL } from '@/services/api/apiUtils';
 import ActivityTable from './ActivityTable';
 
 interface Activity {

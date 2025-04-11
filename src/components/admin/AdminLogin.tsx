@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL, adminApi } from '@/services/api';
+import { adminApi } from '@/services/api';
+import { API_BASE_URL } from '@/services/api/apiUtils';
 import { Lock } from 'lucide-react';
 
 interface AdminLoginProps {
