@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -16,12 +17,27 @@ interface VehicleFormProps {
   onSuccess?: () => void;
 }
 
+interface VehicleFormData {
+  title: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  mileage: number;
+  fuelType: string;
+  transmission: string;
+  description: string;
+  features: string;
+  isFeatured: boolean;
+  status: string;
+}
+
 const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const { toast } = useToast();
   
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<VehicleFormData>({
     defaultValues: {
       title: '',
       make: '',
@@ -60,7 +76,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
         const vehicle = response;
         Object.keys(vehicle).forEach(key => {
           if (key !== 'images' && key !== '_id') {
-            setValue(key, vehicle[key]);
+            // Only set value if the key exists in our form
+            if (key in watch()) {
+              setValue(key as keyof VehicleFormData, vehicle[key]);
+            }
           }
         });
         
@@ -80,9 +99,9 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
     };
     
     fetchVehicleData();
-  }, [vehicleId, setValue, toast]);
+  }, [vehicleId, setValue, toast, watch]);
   
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: VehicleFormData) => {
     setIsLoading(true);
     
     try {
@@ -183,8 +202,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                 id="title"
                 {...register('title', { required: "Le titre est requis" })}
                 placeholder="Titre de l'annonce"
-                error={errors.title?.message}
               />
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -197,8 +218,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                   min: { value: 0, message: "Le prix doit être positif" }
                 })}
                 placeholder="Prix"
-                error={errors.price?.message}
               />
+              {errors.price && (
+                <p className="text-sm text-red-500">{errors.price.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -207,8 +230,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                 id="make"
                 {...register('make', { required: "La marque est requise" })}
                 placeholder="Marque"
-                error={errors.make?.message}
               />
+              {errors.make && (
+                <p className="text-sm text-red-500">{errors.make.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -217,8 +242,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                 id="model"
                 {...register('model', { required: "Le modèle est requis" })}
                 placeholder="Modèle"
-                error={errors.model?.message}
               />
+              {errors.model && (
+                <p className="text-sm text-red-500">{errors.model.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -232,8 +259,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                   max: { value: new Date().getFullYear() + 1, message: "L'année ne peut pas être future" }
                 })}
                 placeholder="Année"
-                error={errors.year?.message}
               />
+              {errors.year && (
+                <p className="text-sm text-red-500">{errors.year.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -246,8 +275,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
                   min: { value: 0, message: "Le kilométrage doit être positif" }
                 })}
                 placeholder="Kilométrage"
-                error={errors.mileage?.message}
               />
+              {errors.mileage && (
+                <p className="text-sm text-red-500">{errors.mileage.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -307,7 +338,7 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
               <Checkbox 
                 id="isFeatured" 
                 checked={watch('isFeatured')}
-                onCheckedChange={(checked) => setValue('isFeatured', checked)}
+                onCheckedChange={(checked) => setValue('isFeatured', checked === true)}
               />
               <Label htmlFor="isFeatured">Véhicule en vedette</Label>
             </div>
@@ -320,8 +351,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
               {...register('description', { required: "La description est requise" })}
               placeholder="Description détaillée du véhicule"
               rows={6}
-              error={errors.description?.message}
             />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description.message}</p>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -331,8 +364,10 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
               {...register('features')}
               placeholder="Climatisation, GPS, Bluetooth, etc."
               rows={3}
-              error={errors.features?.message}
             />
+            {errors.features && (
+              <p className="text-sm text-red-500">{errors.features.message}</p>
+            )}
           </div>
           
           {vehicleId && (

@@ -43,8 +43,8 @@ function App() {
             <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="vehicles" element={<VehiclesList />} />
-            <Route path="vehicles/add" element={<VehicleForm mode="create" />} />
-            <Route path="vehicles/edit/:id" element={<VehicleForm mode="edit" />} />
+            <Route path="vehicles/add" element={<VehicleForm />} />
+            <Route path="vehicles/edit/:id" element={<VehicleForm />} />
             <Route path="messages" element={<MessagesList />} />
             <Route path="media" element={<MediaManager />} />
             <Route path="activity" element={<ActivityLog />} />
