@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { contactApi } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +25,6 @@ export const useMessages = () => {
       setError(null);
       setNetworkError(false);
       
-      // Vérifier si token existe, sinon rediriger vers login
       const token = localStorage.getItem('adminToken');
       if (!token) {
         setError('Vous devez être connecté pour accéder aux messages.');
@@ -42,7 +40,6 @@ export const useMessages = () => {
         throw new Error("Problème de connexion avec le serveur. Veuillez vérifier que le backend est en cours d'exécution.");
       }
       
-      // Vérifier si response est un array (succès) ou contient une erreur
       if (response && response.error) {
         if (response.message && response.message.includes('Network error')) {
           setNetworkError(true);
@@ -52,13 +49,11 @@ export const useMessages = () => {
       
       console.log('Messages fetched successfully:', response);
       
-      // Si la réponse n'est pas un tableau, utiliser un tableau vide
       setMessages(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       setError('Impossible de récupérer les messages. ' + (error.message || 'Veuillez réessayer plus tard.'));
       
-      // Si erreur d'authentification, supprimer le token
       if (error.message && (
         error.message.includes('token') || 
         error.message.includes('unauthorized') || 
@@ -70,7 +65,6 @@ export const useMessages = () => {
           variant: "destructive",
         });
         localStorage.removeItem('adminToken');
-        // Force refresh to redirect to login
         window.location.href = '/admin';
       } else {
         toast({
@@ -92,7 +86,6 @@ export const useMessages = () => {
         throw new Error(response.message || "Erreur lors du marquage du message");
       }
       
-      // Update local state
       setMessages(messages.map(msg => 
         msg._id === id ? { ...msg, responded: true } : msg
       ));

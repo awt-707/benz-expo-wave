@@ -1,124 +1,88 @@
 
-// Base URL for API requests
+// Define API base URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-// Helper function to handle API responses
-export const handleResponse = async (response: Response) => {
-  console.log(`API Response: ${response.url}`, response.status, response.statusText);
-  
-  if (!response.ok) {
-    try {
-      const errorData = await response.json();
-      console.error('API error response:', errorData);
-      return { 
-        error: true, 
-        message: errorData.message || `API error: ${response.status} ${response.statusText}`,
-        status: response.status,
-        details: errorData
-      };
-    } catch (parseError) {
-      console.error('Error parsing API error response:', parseError);
-      return { 
-        error: true, 
-        message: `API error: ${response.status} ${response.statusText}`,
-        status: response.status
-      };
-    }
-  }
-  
-  try {
-    // Vérifier si la réponse contient du contenu
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log('API response data:', data);
-      return data;
-    } else {
-      console.log('API response has no JSON content, returning success object');
-      return { success: true, status: response.status };
-    }
-  } catch (parseError) {
-    console.error('Error parsing API success response:', parseError);
-    
-    // If response is empty but status is OK, return a success object
-    if (response.status >= 200 && response.status < 300) {
-      return { success: true, status: response.status };
-    }
-    
-    return { 
-      error: true, 
-      message: 'Failed to parse server response',
-      status: response.status
-    };
-  }
-};
-
-// Helper to obtain authentication headers
+/**
+ * Get authentication headers for protected API calls
+ * @returns Headers object with Authorization token
+ */
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('adminToken');
-  
-  if (!token) {
-    console.warn('No authentication token found');
-    return {
-      'Content-Type': 'application/json'
-    };
-  }
-  
-  console.log('Using authentication token');
   return {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    'Authorization': token ? `Bearer ${token}` : '',
   };
 };
 
-// Helper to check authentication status
-export const isAuthenticated = () => {
-  const token = localStorage.getItem('adminToken');
-  return !!token;
-};
+/**
+ * Handle API response and standardize error handling
+ * @param response Fetch response object
+ * @returns Processed response data or error object
+ */
+export const handleResponse = async (response) => {
+  if (!response) {
+    console.error('Network error - no response received');
+    return { error: true, message: 'Network error - check your server connection' };
+  }
 
-// Helper to handle API errors
-export const handleApiError = (error: any) => {
-  console.error('API error:', error);
-  const message = error.message || 'Une erreur est survenue lors de la communication avec le serveur';
-  return { error: true, message };
-};
+  if (!response.ok) {
+    // Try to get error details from response
+    try {
+      const errorData = await response.json();
+      return { 
+        error: true, 
+        status: response.status,
+        message: errorData.message || `Error: ${response.status} ${response.statusText}`
+      };
+    } catch (parseError) {
+      return { 
+        error: true, 
+        status: response.status,
+        message: `Error: ${response.status} ${response.statusText}`
+      };
+    }
+  }
 
-// Helper to refresh token if needed
-export const refreshAdminToken = async () => {
-  const token = localStorage.getItem('adminToken');
-  if (!token) return false;
-  
   try {
-    // Call a refresh endpoint - this would need to be implemented on the server
-    const response = await fetch(`${API_BASE_URL}/admin/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      localStorage.removeItem('adminToken');
-      return false;
-    }
-    
-    const data = await response.json();
-    if (data.token) {
-      localStorage.setItem('adminToken', data.token);
-      return true;
-    }
-    
-    return false;
+    return await response.json();
   } catch (error) {
-    console.error('Error refreshing token:', error);
-    return false;
+    // If there's no JSON to parse but response was OK (e.g., 204 No Content)
+    if (response.status >= 200 && response.status < 300) {
+      return { success: true };
+    }
+    
+    return { error: true, message: 'Error parsing response' };
   }
 };
 
-// Helper to clear the auth data and return to login
-export const logoutAndRedirect = () => {
-  localStorage.removeItem('adminToken');
-  window.location.href = '/admin';
+/**
+ * Standardized API error handler
+ * @param error Error object
+ * @returns Formatted error object
+ */
+export const handleApiError = (error) => {
+  console.error('API error:', error);
+  return { 
+    error: true, 
+    message: error instanceof Error ? error.message : 'Unknown error' 
+  };
+};
+
+/**
+ * Helper to check if token is expired or user is not authenticated
+ * @param error Error object from API call
+ * @returns Boolean indicating if authentication failed
+ */
+export const isAuthError = (error) => {
+  if (!error) return false;
+  
+  const errorMsg = typeof error.message === 'string' ? error.message.toLowerCase() : '';
+  return (
+    error.status === 401 || 
+    error.status === 403 || 
+    errorMsg.includes('unauthorized') ||
+    errorMsg.includes('forbidden') ||
+    errorMsg.includes('token') ||
+    errorMsg.includes('authentication')
+  );
 };
