@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/services/api';
+import { API_BASE_URL, adminApi } from '@/services/api';
 import ActivityTable from './ActivityTable';
 
 interface Activity {
@@ -33,20 +33,13 @@ const ActivityLog = () => {
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/admin/activities`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de la récupération de l\'activité');
+        const result = await adminApi.getActivityLog();
+        
+        if (result.error) {
+          throw new Error(result.message || 'Erreur lors de la récupération de l\'activité');
         }
 
-        const data = await response.json();
-        setActivities(data);
+        setActivities(result);
       } catch (err: any) {
         setError(err.message || 'Erreur lors de la récupération de l\'activité.');
         toast({

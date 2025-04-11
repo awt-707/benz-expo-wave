@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { API_BASE_URL } from '@/services/api';
+import { API_BASE_URL, adminApi } from '@/services/api';
 import { Lock } from 'lucide-react';
 
 interface AdminLoginProps {
@@ -34,19 +34,11 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const result = await adminApi.login({ username, password });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        localStorage.setItem('adminToken', data.token);
-        onLoginSuccess(data.token);
+      if (!result.error) {
+        localStorage.setItem('adminToken', result.token);
+        onLoginSuccess(result.token);
         toast({
           title: "Connexion réussie",
           description: "Bienvenue dans votre panneau d'administration",
@@ -55,7 +47,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       } else {
         toast({
           title: "Erreur de connexion",
-          description: data.message || "Identifiants incorrects",
+          description: result.message || "Identifiants incorrects",
           variant: "destructive",
         });
       }
