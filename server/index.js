@@ -14,8 +14,31 @@ const mediaRoutes = require('./routes/mediaRoutes');
 
 const app = express();
 
+// Liste des domaines autorisés
+const allowedOrigins = [
+  'https://votre-domaine.com',
+  'https://e47e7d7d-a426-49db-b179-2ca994df7452.lovableproject.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// CORS configuration avec gestion des origins
+app.use(cors({
+  origin: function(origin, callback) {
+    // Autorise les requêtes sans origin (comme les appels API mobiles)
+    if (!origin) return callback(null, true);
+    
+    // Vérifie si l'origine est dans la liste des origines autorisées
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
@@ -59,7 +82,7 @@ app.use('/videos', express.static(path.join(__dirname, 'uploads/videos')));
 
 // Log all requests for debugging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} from ${req.get('origin') || 'unknown origin'}`);
   next();
 });
 
@@ -152,6 +175,7 @@ app.listen(PORT, () => {
   console.log(`MongoDB connection: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Not connected'}`);
   console.log(`Static files served from: ${path.join(__dirname, 'uploads')}`);
   console.log(`API base URL: http://localhost:${PORT}/api`);
+  console.log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
 });
 
 module.exports = app;

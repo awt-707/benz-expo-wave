@@ -1,6 +1,8 @@
 
+import { API_CONFIG, buildApiUrl } from '@/config/apiConfig';
+
 // Define API base URL
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+export const API_BASE_URL = API_CONFIG.BASE_URL;
 
 /**
  * Get authentication headers for protected API calls
@@ -86,3 +88,39 @@ export const isAuthError = (error) => {
     errorMsg.includes('authentication')
   );
 };
+
+/**
+ * Effectue une requête API avec gestion d'erreur et retry
+ */
+export const fetchWithRetry = async (url: string, options: RequestInit = {}, maxRetries = API_CONFIG.RETRY.MAX_RETRIES) => {
+  let retries = 0;
+  
+  while (retries <= maxRetries) {
+    try {
+      console.log(`Fetching ${url} (attempt ${retries + 1}/${maxRetries + 1})`);
+      const response = await fetch(buildApiUrl(url), {
+        ...API_CONFIG.DEFAULT_OPTIONS,
+        ...options,
+        headers: {
+          ...API_CONFIG.DEFAULT_OPTIONS.headers,
+          ...(options.headers || {})
+        }
+      });
+      
+      return response;
+    } catch (error) {
+      retries++;
+      console.error(`Fetch attempt ${retries} failed for ${url}:`, error);
+      
+      if (retries <= maxRetries) {
+        // Attente exponentielle entre les retries
+        const delay = API_CONFIG.RETRY.RETRY_DELAY * Math.pow(2, retries - 1);
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+};
+
