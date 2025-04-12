@@ -20,6 +20,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Debug info
+  console.log('Current API URL:', API_BASE_URL);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +37,21 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     }
     
     setIsLoading(true);
+    console.log('Attempting login with username:', username);
     
     try {
+      console.log('Sending login request to:', `${API_BASE_URL}/admin/login`);
       const result = await adminApi.login({ username, password });
       
-      if (!result.error) {
+      console.log('Login response:', result);
+      
+      if (result.error) {
+        throw new Error(result.message || 'Identifiants incorrects');
+      }
+      
+      if (result.token) {
         localStorage.setItem('adminToken', result.token);
+        console.log('Login successful, token stored');
         onLoginSuccess(result.token);
         toast({
           title: "Connexion réussie",
@@ -47,16 +59,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
         });
         navigate('/admin/dashboard');
       } else {
-        toast({
-          title: "Erreur de connexion",
-          description: result.message || "Identifiants incorrects",
-          variant: "destructive",
-        });
+        throw new Error('No token received');
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "Erreur",
-        description: "Impossible de se connecter au serveur",
+        title: "Erreur de connexion",
+        description: error instanceof Error ? error.message : "Impossible de se connecter au serveur",
         variant: "destructive",
       });
     } finally {
@@ -68,6 +77,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
+          <div className="flex items-center justify-center mb-2">
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <div className="absolute inset-0 border-2 border-black rounded-full"></div>
+              <div className="w-10 h-10 flex items-center justify-center">
+                <div className="text-black font-serif text-xl font-bold">Dz</div>
+              </div>
+            </div>
+            <span className="text-2xl font-bold ml-2">auto</span>
+          </div>
           <CardTitle className="text-2xl font-bold">Admin Panel</CardTitle>
           <CardDescription>
             Connectez-vous pour accéder au panneau d'administration
@@ -95,6 +113,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
+            </div>
+            <div className="text-sm text-gray-500 border-t pt-2 mt-2">
+              <p>Par défaut: admin / admin00</p>
             </div>
           </CardContent>
           <CardFooter>

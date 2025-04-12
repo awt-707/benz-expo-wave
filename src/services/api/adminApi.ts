@@ -6,6 +6,8 @@ export const adminApi = {
   login: async (credentials: { username: string; password: string }) => {
     try {
       console.log('Logging in with username:', credentials.username);
+      console.log('Login endpoint:', `${API_BASE_URL}/admin/login`);
+      
       const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: {
@@ -13,6 +15,8 @@ export const adminApi = {
         },
         body: JSON.stringify(credentials),
       });
+      
+      console.log('Login response status:', response.status);
       return handleResponse(response);
     } catch (error) {
       console.error('Login error:', error);

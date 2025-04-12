@@ -1,8 +1,8 @@
 
 // Configuration API
 export const API_CONFIG = {
-  // L'URL de base de l'API - remplacez cette valeur par l'URL de votre serveur déployé
-  BASE_URL: import.meta.env.VITE_API_URL || "https://votre-serveur-backend.com/api",
+  // L'URL de base de l'API - Now using a valid localhost URL for development
+  BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:5001/api",
   
   // Timeout pour les requêtes API (en millisecondes)
   TIMEOUT: 30000,
@@ -20,13 +20,13 @@ export const API_CONFIG = {
     TOKEN_EXPIRY_CHECK_INTERVAL: 60 * 1000 // Vérifier l'expiration chaque minute
   },
   
-  // Options par défaut pour fetch
+  // Options par défaut pour fetch - fix credentials type
   DEFAULT_OPTIONS: {
     headers: {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest"
     },
-    credentials: 'same-origin'
+    credentials: 'same-origin' as RequestCredentials
   }
 };
 

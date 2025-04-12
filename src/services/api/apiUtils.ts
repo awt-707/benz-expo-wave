@@ -98,14 +98,20 @@ export const fetchWithRetry = async (url: string, options: RequestInit = {}, max
   while (retries <= maxRetries) {
     try {
       console.log(`Fetching ${url} (attempt ${retries + 1}/${maxRetries + 1})`);
-      const response = await fetch(buildApiUrl(url), {
+      
+      // Create a proper RequestInit object with correct types
+      const requestOptions: RequestInit = {
         ...API_CONFIG.DEFAULT_OPTIONS,
         ...options,
         headers: {
           ...API_CONFIG.DEFAULT_OPTIONS.headers,
           ...(options.headers || {})
-        }
-      });
+        },
+        // Fix the credentials type issue by providing a valid RequestCredentials value
+        credentials: (API_CONFIG.DEFAULT_OPTIONS.credentials as RequestCredentials) || 'same-origin'
+      };
+      
+      const response = await fetch(buildApiUrl(url), requestOptions);
       
       return response;
     } catch (error) {
@@ -123,4 +129,3 @@ export const fetchWithRetry = async (url: string, options: RequestInit = {}, max
     }
   }
 };
-
