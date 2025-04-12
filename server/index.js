@@ -6,6 +6,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -22,6 +24,9 @@ const allowedOrigins = [
   'http://localhost:3000'
 ];
 
+// Add basic security headers
+app.use(helmet());
+
 // CORS configuration avec gestion des origins
 app.use(cors({
   origin: function(origin, callback) {
@@ -37,6 +42,16 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// Rate limiting to prevent brute force attacks
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Trop de requêtes, veuillez réessayer plus tard."
+});
+
+// Apply rate limiting to API routes
+app.use('/api/', apiLimiter);
 
 // Middleware
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -95,7 +110,7 @@ app.use('/api/media', mediaRoutes);
 
 // Base route
 app.get('/', (req, res) => {
-  res.send('3ansdz API is running');
+  res.send('Dzauto API is running');
 });
 
 // Debug routes

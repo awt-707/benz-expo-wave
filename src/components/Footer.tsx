@@ -13,7 +13,7 @@ const Footer = () => {
   const [contactInfo, setContactInfo] = useState({
     address: '123 Rue des Exportateurs',
     phone: '+213 123 456 789',
-    email: 'contact@3ansdz.com'
+    email: 'contact@dzauto.com'
   });
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const Footer = () => {
             setContactInfo({
               address: config.contactInfo.address || '123 Rue des Exportateurs',
               phone: config.contactInfo.phone || '+213 123 456 789',
-              email: config.contactInfo.email || 'contact@3ansdz.com'
+              email: config.contactInfo.email || 'contact@dzauto.com'
             });
           }
         }
@@ -54,10 +54,10 @@ const Footer = () => {
               <div className="relative w-10 h-10 flex items-center justify-center">
                 <div className="absolute inset-0 border-2 border-white rounded-full"></div>
                 <div className="w-8 h-8 flex items-center justify-center">
-                  <div className="text-white font-serif text-xl font-bold">D</div>
+                  <div className="text-white font-serif text-xl font-bold">Dz</div>
                 </div>
               </div>
-              <span className="text-white font-serif text-xl font-bold">Dzauto</span>
+              <span className="text-white font-serif text-xl font-bold">auto</span>
             </div>
             <p className="text-gray-400 mb-4">
               Expert en vente et exportation de véhicules.

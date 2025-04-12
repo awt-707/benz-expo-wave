@@ -13,11 +13,20 @@ export const API_CONFIG = {
     RETRY_DELAY: 1000
   },
   
+  // Configuration de sécurité
+  SECURITY: {
+    TOKEN_REFRESH_THRESHOLD: 5 * 60 * 1000, // 5 minutes avant expiration
+    TOKEN_KEY: 'adminToken',
+    TOKEN_EXPIRY_CHECK_INTERVAL: 60 * 1000 // Vérifier l'expiration chaque minute
+  },
+  
   // Options par défaut pour fetch
   DEFAULT_OPTIONS: {
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest"
+    },
+    credentials: 'same-origin'
   }
 };
 
@@ -31,4 +40,20 @@ export const buildApiUrl = (endpoint: string): string => {
     : API_CONFIG.BASE_URL;
   
   return `${baseUrl}${formattedEndpoint}`;
+};
+
+// Vérifier si un token JWT est expiré
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    const { exp } = JSON.parse(jsonPayload);
+    return exp * 1000 < Date.now();
+  } catch (e) {
+    return true; // Si on ne peut pas décoder, on considère le token comme expiré
+  }
 };
