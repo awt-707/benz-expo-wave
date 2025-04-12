@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,7 +17,7 @@ const AboutPage = () => {
           <div className="container mx-auto px-4">
             <ScrollReveal>
               <h1 className="text-4xl md:text-5xl font-serif font-bold mb-6 text-center">
-                À Propos de -3ans DZ
+                À Propos de Dz auto
               </h1>
               <p className="text-white/80 max-w-3xl mx-auto text-center text-lg">
                 Votre partenaire de confiance pour l'exportation de véhicules de l'Europe vers l'Algérie.
@@ -36,13 +35,13 @@ const AboutPage = () => {
                     Notre Histoire
                   </h2>
                   <p className="text-gray-600 mb-4">
-                    Fondée en 2019, -3ans DZ est née de la volonté de simplifier et sécuriser l'exportation de véhicules premium de l'Europe vers l'Algérie. Nos fondateurs, après avoir constaté les difficultés et les risques liés à ce processus, ont décidé de mettre leur expertise au service des particuliers et des professionnels.
+                    Fondée en 2019, Dz auto est née de la volonté de simplifier et sécuriser l'exportation de véhicules premium de l'Europe vers l'Algérie. Nos fondateurs, après avoir constaté les difficultés et les risques liés à ce processus, ont décidé de mettre leur expertise au service des particuliers et des professionnels.
                   </p>
                   <p className="text-gray-600 mb-4">
                     Au fil des années, nous avons développé un réseau solide de partenaires en Europe et en Algérie, permettant d'offrir un service complet et fiable à nos clients. Notre connaissance approfondie des marchés européens et des réglementations algériennes nous positionne comme un acteur incontournable dans ce secteur spécialisé.
                   </p>
                   <p className="text-gray-600">
-                    Aujourd'hui, -3ans DZ est fière d'avoir accompagné plus de 500 clients dans leur projet d'acquisition de véhicules premium, avec un taux de satisfaction exceptionnel qui témoigne de notre engagement envers l'excellence.
+                    Aujourd'hui, Dz auto est fière d'avoir accompagné plus de 500 clients dans leur projet d'acquisition de véhicules premium, avec un taux de satisfaction exceptionnel qui témoigne de notre engagement envers l'excellence.
                   </p>
                 </ScrollReveal>
               </div>
@@ -53,7 +52,7 @@ const AboutPage = () => {
                     <div className="absolute -top-4 -left-4 w-24 h-24 border-2 border-mercedes-blue z-0"></div>
                     <img 
                       src="/lovable-uploads/3bf54152-1a0e-47d2-a44f-fae8843a5058.png" 
-                      alt="Histoire de -3ans DZ" 
+                      alt="Histoire de Dz auto" 
                       className="w-full h-auto rounded-sm shadow-xl relative z-10"
                     />
                     <div className="absolute -bottom-4 -right-4 w-24 h-24 border-2 border-mercedes-blue z-0"></div>
@@ -72,7 +71,7 @@ const AboutPage = () => {
                   Notre Mission et Nos Valeurs
                 </h2>
                 <p className="text-gray-600">
-                  Chez -3ans DZ, nous nous engageons à offrir un service d'excellence à chaque étape du processus d'exportation.
+                  Chez Dz auto, nous nous engageons à offrir un service d'excellence à chaque étape du processus d'exportation.
                 </p>
               </div>
             </ScrollReveal>

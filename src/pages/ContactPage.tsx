@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Map, Phone, Mail, MapPin, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -69,7 +68,7 @@ const ContactPage = () => {
                         </div>
                         <div>
                           <h3 className="font-bold mb-1">Email</h3>
-                          <p className="text-gray-600">contact@3ansdz.com</p>
+                          <p className="text-gray-600">contact@dzauto.com</p>
                         </div>
                       </div>
                       

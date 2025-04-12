@@ -11,11 +11,11 @@ const HomeAbout = () => {
           <div className="md:w-1/2 mb-12 md:mb-0 md:pr-16">
             <ScrollReveal direction="left" duration={800} distance={40}>
               <h2 className="text-3xl md:text-5xl font-serif font-bold mb-6 text-mercedes-black">
-                Pourquoi choisir -3ans DZ?
+                Pourquoi choisir Dz auto?
               </h2>
               <div className="w-24 h-1 bg-mercedes-blue mb-8"></div>
               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                Avec plus de 5 ans d'expérience dans l'exportation automobile, -3ans DZ s'est imposé comme un acteur de référence sur le marché. Notre expertise nous permet de vous offrir un service complet, de la sélection du véhicule jusqu'à sa livraison en Algérie.
+                Avec plus de 5 ans d'expérience dans l'exportation automobile, Dz auto s'est imposé comme un acteur de référence sur le marché. Notre expertise nous permet de vous offrir un service complet, de la sélection du véhicule jusqu'à sa livraison en Algérie.
               </p>
               <ul className="space-y-4 mb-10">
                 <li className="flex items-start">
