@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -14,7 +13,7 @@ const carouselItems = [
     id: 1,
     image: "/lovable-uploads/ea38bd58-5015-4016-a27f-9e96383424fb.png",
     title: "Votre Partenaire d'Exportation Automobile",
-    description: "Spécialiste de l'exportation de véhicules premium de l'Europe vers l'Algérie."
+    description: "Expert en vente et exportation de véhicules premium."
   },
   {
     id: 2,

@@ -54,13 +54,13 @@ const Footer = () => {
               <div className="relative w-10 h-10 flex items-center justify-center">
                 <div className="absolute inset-0 border-2 border-white rounded-full"></div>
                 <div className="w-8 h-8 flex items-center justify-center">
-                  <div className="text-white font-serif text-xl font-bold">3</div>
+                  <div className="text-white font-serif text-xl font-bold">D</div>
                 </div>
               </div>
-              <span className="text-white font-serif text-xl font-bold">-3ans DZ</span>
+              <span className="text-white font-serif text-xl font-bold">Dzauto</span>
             </div>
             <p className="text-gray-400 mb-4">
-              Spécialiste de l'exportation de véhicules premium de l'Europe vers l'Algérie.
+              Expert en vente et exportation de véhicules.
             </p>
             <div className="flex space-x-4">
               {socialLinks.facebook && socialLinks.facebook !== '#' && (
@@ -121,7 +121,7 @@ const Footer = () => {
         
         <div className="border-t border-gray-800 pt-8">
           <p className="text-center text-gray-500 text-sm">
-            &copy; {currentYear} -3ans DZ. Tous droits réservés.
+            &copy; {currentYear} Dzauto. Tous droits réservés.
           </p>
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -21,7 +20,6 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
@@ -43,10 +41,10 @@ const Navbar = () => {
           <div className="relative w-10 h-10 flex items-center justify-center">
             <div className="absolute inset-0 border-2 border-white rounded-full"></div>
             <div className="w-8 h-8 flex items-center justify-center">
-              <div className="text-white font-serif text-xl font-bold">3</div>
+              <div className="text-white font-serif text-xl font-bold">D</div>
             </div>
           </div>
-          <span className="text-white font-serif text-xl font-bold">-3ans DZ</span>
+          <span className="text-white font-serif text-xl font-bold">Dzauto</span>
         </Link>
         
         <div className="hidden md:flex space-x-8">
@@ -73,7 +71,6 @@ const Navbar = () => {
         </button>
       </div>
       
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-mercedes-black/95 backdrop-blur-md animate-fade-in">
           <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
