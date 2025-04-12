@@ -27,8 +27,19 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicleId, onSuccess }) => {
     isDirty,
     images,
     handleImageUpload,
-    ...form
+    control,
+    formState,
+    ...formMethods
   } = useVehicleForm({ vehicleId, onSuccess });
+  
+  // Create a complete form object that we'll pass to child components
+  const form = {
+    control,
+    formState,
+    handleSubmit,
+    reset,
+    ...formMethods
+  };
   
   return (
     <Card>

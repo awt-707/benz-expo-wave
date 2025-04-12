@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
@@ -39,7 +38,7 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
   const [images, setImages] = useState<string[]>([]);
   const { toast } = useToast();
   
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isValid, isDirty } } = useForm<VehicleFormValues>({
+  const methods = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
     mode: "onBlur", // Validate on blur for better user experience
     defaultValues: {
@@ -57,6 +56,9 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
       status: 'available'
     }
   });
+  
+  const { formState, control, setValue, watch, reset, handleSubmit } = methods;
+  const { errors, isValid, isDirty } = formState;
   
   // Fetch vehicle data if editing
   useEffect(() => {
@@ -196,17 +198,15 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
   };
 
   return {
-    register,
-    handleSubmit,
-    onSubmit,
-    setValue,
-    watch,
-    reset,
+    ...methods,
+    control,
+    formState,
     errors,
     isLoading,
     isValid,
     isDirty,
     images,
-    handleImageUpload
+    handleImageUpload,
+    onSubmit,
   };
 };
