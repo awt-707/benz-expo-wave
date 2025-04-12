@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,7 @@ interface UseVehicleFormProps {
 export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const { toast } = useToast();
   
   const methods = useForm<VehicleFormValues>({
@@ -156,9 +158,18 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
   };
   
   const handleImageUpload = async (files: File[]) => {
-    if (!vehicleId || files.length === 0) return;
+    if (!vehicleId || files.length === 0) {
+      setUploadError("ID du véhicule manquant ou aucun fichier sélectionné");
+      toast({
+        title: "Erreur",
+        description: "ID du véhicule manquant ou aucun fichier sélectionné",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsLoading(true);
+    setUploadError(null);
     
     try {
       const formData = new FormData();
@@ -166,12 +177,15 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
         formData.append('vehicleImages', file);
       });
       
+      console.log(`Uploading ${files.length} images for vehicle ID: ${vehicleId}`);
+      
       const result = await vehiclesApi.uploadImages(vehicleId, formData);
       
       if (result.error) {
+        setUploadError(result.message || "Échec du téléchargement des images");
         toast({
           title: "Erreur",
-          description: "Impossible de télécharger les images",
+          description: result.message || "Échec du téléchargement des images",
           variant: "destructive",
         });
         return;
@@ -180,6 +194,7 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
       // Update images list
       if (result.images && Array.isArray(result.images)) {
         setImages(result.images);
+        console.log("Images updated successfully:", result.images);
       }
       
       toast({
@@ -187,6 +202,8 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
         description: "Images téléchargées avec succès",
       });
     } catch (error) {
+      console.error("Erreur lors de l'upload des images:", error);
+      setUploadError("Une erreur est survenue lors du téléchargement des images");
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors du téléchargement des images",
@@ -206,6 +223,7 @@ export const useVehicleForm = ({ vehicleId, onSuccess }: UseVehicleFormProps) =>
     isValid,
     isDirty,
     images,
+    uploadError,
     handleImageUpload,
     onSubmit,
   };

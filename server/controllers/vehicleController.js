@@ -173,7 +173,7 @@ exports.deleteVehicle = async (req, res) => {
 // Upload vehicle images
 exports.uploadImages = (req, res) => {
   console.log('Vehicle ID for image upload:', req.params.id);
-  const uploadMultiple = upload.array('images', 10); // Allow up to 10 images
+  const uploadMultiple = upload.array('vehicleImages', 10); // Match client-side field name 'vehicleImages'
 
   uploadMultiple(req, res, async (err) => {
     if (err) {

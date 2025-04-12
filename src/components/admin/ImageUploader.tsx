@@ -2,9 +2,10 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X, ImageIcon } from 'lucide-react';
+import { Upload, X, ImageIcon, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/services/api/apiUtils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ImageUploaderProps {
   existingImages?: string[];
@@ -20,6 +21,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [dragging, setDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -61,6 +64,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const imageFiles = files.filter(file => validImageTypes.includes(file.type));
     
     if (imageFiles.length === 0) {
+      setError("Veuillez sélectionner des images valides (JPEG, PNG, WEBP)");
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner des images valides (JPEG, PNG, WEBP)",
@@ -69,6 +73,20 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
+    // Maximum file size check (5MB)
+    const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      setError("Certaines images dépassent la taille maximale de 5MB");
+      toast({
+        title: "Erreur",
+        description: "Certaines images dépassent la taille maximale de 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setError(null);
+    
     // Generate preview URLs for the selected files
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
     
@@ -84,7 +102,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadFiles = () => {
+  const uploadFiles = async () => {
     if (selectedFiles.length === 0) {
       toast({
         title: "Information",
@@ -93,12 +111,36 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
 
-    onUpload(selectedFiles);
+    if (!vehicleId) {
+      setError("ID de véhicule manquant. Veuillez d'abord enregistrer le véhicule.");
+      toast({
+        title: "Erreur",
+        description: "ID de véhicule manquant. Veuillez d'abord enregistrer le véhicule.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadStatus('loading');
     
-    // Clean up preview URLs to avoid memory leaks
-    previews.forEach(preview => URL.revokeObjectURL(preview));
-    setPreviews([]);
-    setSelectedFiles([]);
+    try {
+      await onUpload(selectedFiles);
+      setUploadStatus('success');
+      
+      // Clean up preview URLs to avoid memory leaks
+      previews.forEach(preview => URL.revokeObjectURL(preview));
+      setPreviews([]);
+      setSelectedFiles([]);
+      
+      toast({
+        title: "Succès",
+        description: "Images téléchargées avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'upload:", error);
+      setUploadStatus('error');
+      setError("Erreur lors du téléchargement des images");
+    }
   };
 
   // Clean up preview URLs when component unmounts
@@ -108,18 +150,46 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     };
   }, []);
 
+  // Reset upload status after a delay
+  React.useEffect(() => {
+    if (uploadStatus === 'success' || uploadStatus === 'error') {
+      const timer = setTimeout(() => {
+        setUploadStatus('idle');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [uploadStatus]);
+
+  const getImageUrl = (imagePath: string) => {
+    if (!imagePath) return '/placeholder-car.png';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${API_BASE_URL}${imagePath}`;
+  };
+
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {existingImages.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium mb-2">Images existantes</h3>
+          <h3 className="text-sm font-medium mb-2">Images existantes ({existingImages.length})</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {existingImages.map((image, index) => (
               <div key={index} className="relative group">
                 <img 
-                  src={image.startsWith('http') ? image : `${API_BASE_URL}${image}`} 
+                  src={getImageUrl(image)} 
                   alt={`Vehicle image ${index + 1}`} 
                   className="h-24 w-full object-cover rounded-md border" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-car.png';
+                    console.error(`Failed to load image: ${image}`);
+                  }}
                 />
               </div>
             ))}
@@ -157,7 +227,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               className="hidden"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              JPG, PNG, WEBP jusqu'à 10MB
+              JPG, PNG, WEBP jusqu'à 5MB
             </p>
           </div>
         </CardContent>
@@ -187,7 +257,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     </Button>
                   </div>
                 </div>
-                <p className="text-xs truncate mt-1">{selectedFiles[index].name}</p>
+                <p className="text-xs truncate mt-1">
+                  {selectedFiles[index].name.length > 15
+                    ? `${selectedFiles[index].name.substring(0, 15)}...`
+                    : selectedFiles[index].name}
+                  <span className="text-muted-foreground">
+                    {" "}({Math.round(selectedFiles[index].size / 1024)}KB)
+                  </span>
+                </p>
               </div>
             ))}
           </div>
@@ -196,8 +273,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               type="button"
               onClick={uploadFiles} 
               variant="secondary"
+              disabled={uploadStatus === 'loading' || !vehicleId}
+              className="relative"
             >
-              Télécharger {selectedFiles.length} image{selectedFiles.length > 1 ? 's' : ''}
+              {uploadStatus === 'loading' ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                  Téléchargement...
+                </>
+              ) : (
+                <>Télécharger {selectedFiles.length} image{selectedFiles.length > 1 ? 's' : ''}</>
+              )}
             </Button>
           </div>
         </div>
