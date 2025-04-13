@@ -40,7 +40,7 @@ const ActivityLog = () => {
           throw new Error(result.message || 'Erreur lors de la récupération de l\'activité');
         }
         setActivities(result.activities);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err.message || 'Erreur lors de la récupération de l\'activité.');
         toast({
           title: "Erreur",
