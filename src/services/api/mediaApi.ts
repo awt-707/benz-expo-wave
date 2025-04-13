@@ -23,6 +23,7 @@ export const mediaApi = {
       const response = await fetch(`${API_BASE_URL}/media/test-cloudinary`, {
         headers: getAuthHeaders(),
       });
+      console.log('Cloudinary test response status:', response.status);
       return handleResponse(response);
     } catch (error) {
       console.error('Error testing Cloudinary connection:', error);
