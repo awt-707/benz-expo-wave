@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: 'immersivedigitaldevelopment.com',
+    host: 'https://immersivedigitaldevelopment.com',
   },
   plugins: [
     react(),
