@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { adminApi } from '@/services/api';
-import { API_BASE_URL } from '@/services/api/apiUtils';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import ActivityTable from './ActivityTable';
 
 interface Activity {
@@ -36,12 +35,11 @@ const ActivityLog = () => {
         }
 
         const result = await adminApi.getActivityLog();
-        
-        if (result.error) {
+
+        if (result.error || !result.activities) {
           throw new Error(result.message || 'Erreur lors de la récupération de l\'activité');
         }
-
-        setActivities(result);
+        setActivities(result.activities);
       } catch (err: any) {
         setError(err.message || 'Erreur lors de la récupération de l\'activité.');
         toast({

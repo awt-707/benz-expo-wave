@@ -1,6 +1,5 @@
 
-import React from 'react';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -10,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
 
 interface Activity {
   _id: string;
@@ -35,7 +34,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({ activities }) => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   const getActivityTypeLabel = (type: string) => {
     switch (type) {
       case 'vehicle': return 'Véhicule';
@@ -66,7 +65,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({ activities }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {activities.map((activity) => (
+        {activities?.map((activity) => (
           <TableRow key={activity._id}>
             <TableCell className="font-medium">{activity.action}</TableCell>
             <TableCell>

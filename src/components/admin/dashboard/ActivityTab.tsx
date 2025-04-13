@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Car, MessageSquare, Users } from 'lucide-react';
 
 interface ActivityItem {
@@ -54,7 +53,7 @@ const ActivityTab = ({ activities, formatDate }: ActivityTabProps) => {
           </div>
         ) : (
           <div className="space-y-8">
-            {activities.map((activity) => (
+            {activities?.map((activity) => (
               <div key={activity._id} className="flex">
                 <div className="mr-4 flex flex-col items-center">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${getActivityColor(activity.type)}`}>

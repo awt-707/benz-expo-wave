@@ -112,7 +112,6 @@ const Footer = () => {
             <h3 className="font-serif text-lg font-semibold mb-4">Contact</h3>
             <address className="not-italic text-gray-400">
               <p className="mb-2">{contactInfo.address}</p>
-              <p className="mb-2">Alger, Algérie</p>
               <p className="mb-2">Email: {contactInfo.email}</p>
               <p>Tél: {contactInfo.phone}</p>
             </address>

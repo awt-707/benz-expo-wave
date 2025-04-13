@@ -18,10 +18,12 @@ const app = express();
 
 // Liste des domaines autorisés
 const allowedOrigins = [
-  'https://votre-domaine.com',
+  'https://immersivedigitaldevelopment.com',
+  'https://immersivedigitaldevelopment.fr',
   'https://e47e7d7d-a426-49db-b179-2ca994df7452.lovableproject.com',
   'http://localhost:5173',
-  'http://localhost:3000'
+  'http://localhost:8080',
+  'http://localhost:5000'
 ];
 
 // Add basic security headers
@@ -29,10 +31,10 @@ app.use(helmet());
 
 // CORS configuration avec gestion des origins
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Autorise les requêtes sans origin (comme les appels API mobiles)
     if (!origin) return callback(null, true);
-    
+
     // Vérifie si l'origine est dans la liste des origines autorisées
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = `L'origine ${origin} n'est pas autorisée par la politique CORS`;
@@ -116,15 +118,15 @@ app.get('/', (req, res) => {
 // Debug routes
 app.get('/api/check-uploads', (req, res) => {
   const vehiclesDir = path.join(__dirname, 'uploads/vehicles');
-  
+
   if (!fs.existsSync(vehiclesDir)) {
     return res.json({ exists: false, message: 'Vehicles directory does not exist' });
   }
-  
+
   try {
     const files = fs.readdirSync(vehiclesDir);
-    res.json({ 
-      exists: true, 
+    res.json({
+      exists: true,
       fileCount: files.length,
       files: files.slice(0, 20), // Return first 20 files to avoid overwhelming response
       path: vehiclesDir
@@ -136,15 +138,15 @@ app.get('/api/check-uploads', (req, res) => {
 
 app.get('/api/check-media', (req, res) => {
   const mediaDir = path.join(__dirname, 'uploads/media');
-  
+
   if (!fs.existsSync(mediaDir)) {
     return res.json({ exists: false, message: 'Media directory does not exist' });
   }
-  
+
   try {
     const files = fs.readdirSync(mediaDir);
-    res.json({ 
-      exists: true, 
+    res.json({
+      exists: true,
       fileCount: files.length,
       files: files.slice(0, 20), // Return first 20 files to avoid overwhelming response
       path: mediaDir
@@ -177,9 +179,9 @@ app.use((req, res, next) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
-  res.status(500).json({ 
-    message: 'Internal server error', 
-    error: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message 
+  res.status(500).json({
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message
   });
 });
 
