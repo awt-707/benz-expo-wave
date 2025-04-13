@@ -3,11 +3,17 @@ import { componentTagger } from "lovable-tagger";
 import path from "path";
 import { defineConfig } from "vite";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
+    host: '0.0.0.0',  // Changed from URL to IP
+  },
+  preview: {
     host: '0.0.0.0',
-    port: 8080
+    port: 8080,
+    allowedHosts: [
+      'immersivedigitaldevelopment.com',
+      'www.immersivedigitaldevelopment.com'
+    ]
   },
   plugins: [
     react(),
